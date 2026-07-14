@@ -1,4 +1,4 @@
-import { Line } from '@react-three/drei'
+import { Line, useTexture } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { memo, useMemo, useRef } from 'react'
 import * as THREE from 'three'
@@ -128,6 +128,11 @@ function ProjectBeacons({ activeProjectId }: { activeProjectId: string | null })
 
 function Planet() {
   const planet = useRef<THREE.Group>(null)
+  const texture = useTexture('/planet.webp')
+
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.minFilter = THREE.LinearFilter
+  texture.magFilter = THREE.LinearFilter
 
   useFrame((_, delta) => {
     if (planet.current) planet.current.rotation.y += delta * 0.035
@@ -144,23 +149,15 @@ function Planet() {
 
   return (
     <group ref={planet} position={[2.65, 0.1, -2.3]} rotation={[0.12, 0, -0.18]}>
-      <mesh>
-        <sphereGeometry args={[1.62, 48, 48]} />
-        <meshStandardMaterial color="#071c35" roughness={0.82} metalness={0.08} />
-      </mesh>
-      <mesh scale={1.045}>
-        <sphereGeometry args={[1.62, 32, 32]} />
-        <meshBasicMaterial color="#1d79ba" transparent opacity={0.1} wireframe />
-      </mesh>
-      <mesh scale={1.09}>
-        <sphereGeometry args={[1.62, 32, 32]} />
-        <meshBasicMaterial
-          color="#62f5ff"
+      <sprite scale={[3.38, 3.38, 1]}>
+        <spriteMaterial
+          map={texture}
           transparent
-          opacity={0.11}
-          side={THREE.BackSide}
+          alphaTest={0.025}
+          depthWrite={false}
+          toneMapped={false}
         />
-      </mesh>
+      </sprite>
       <Line points={orbit} color="#4ed9ff" lineWidth={0.45} transparent opacity={0.38} />
       <mesh position={[2.15, 0.08, 0]}>
         <sphereGeometry args={[0.1, 16, 16]} />

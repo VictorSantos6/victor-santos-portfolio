@@ -46,14 +46,23 @@
 
 .css-space-fallback {
   background:
-    radial-gradient(circle at 74% 28%, rgba(30, 103, 151, 0.62) 0 8%, transparent 29%),
     radial-gradient(circle at 82% 40%, rgba(61, 121, 255, 0.32), transparent 18%),
     radial-gradient(circle at 20% 72%, rgba(28, 164, 180, 0.15), transparent 24%),
     #03050a;
 }
 
-.css-space-fallback::before,
 .css-space-fallback::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background-image: url('/planet.webp');
+  background-position: 76% 28%;
+  background-repeat: no-repeat;
+  background-size: clamp(220px, 28vw, 430px);
+  opacity: 0.9;
+}
+
+.css-space-fallback::before {
   position: absolute;
   inset: 0;
   content: '';
