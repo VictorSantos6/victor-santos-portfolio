@@ -727,7 +727,9 @@ footer {
 
 .course-card {
   grid-column: auto;
+  display: flex;
   min-height: 430px;
+  flex-direction: column;
   padding: 0;
   overflow: visible;
   border: 0;
@@ -741,7 +743,7 @@ footer {
   display: grid;
   gap: 10px;
   width: 100%;
-  margin: 15px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -768,7 +770,9 @@ footer {
 
 .skills-orbit {
   grid-column: auto;
+  display: flex;
   min-height: 430px;
+  flex-direction: column;
   padding: 0;
   overflow: visible;
   border: 0;
@@ -778,8 +782,9 @@ footer {
   backdrop-filter: none;
 }
 
+.course-card > .mini-label,
 .skills-orbit > .mini-label {
-  margin-bottom: 15px;
+  margin-bottom: 28px;
 }
 
 .skill-group {
@@ -793,6 +798,10 @@ footer {
   border: 1px solid rgba(var(--accent-rgb), 0.14);
   border-radius: 18px;
   background: rgba(var(--accent-rgb), 0.055);
+}
+
+.skill-group:first-of-type {
+  margin-top: 0;
 }
 
 .skill-group p {
