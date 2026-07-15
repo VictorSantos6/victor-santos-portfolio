@@ -515,13 +515,7 @@ footer {
   align-self: end;
   width: min(100%, 300px);
   margin: 0 0 38px auto;
-  gap: 8px;
-  padding: 10px;
-  border: 1px solid rgba(var(--accent-rgb), 0.22);
-  border-radius: 24px;
-  background: linear-gradient(145deg, rgba(224, 244, 255, 0.07), rgba(var(--space-rgb), 0.68));
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(18px);
+  gap: 10px;
 }
 
 .hero-telemetry div {
@@ -734,17 +728,21 @@ footer {
 .course-card {
   grid-column: auto;
   min-height: 430px;
-  padding: 40px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .course-card ul {
   display: grid;
-  gap: 8px;
-  margin: 35px 0 0;
-  padding: 10px;
-  border: 1px solid rgba(var(--accent-rgb), 0.14);
-  border-radius: 22px;
-  background: rgba(var(--space-rgb), 0.28);
+  gap: 10px;
+  width: 100%;
+  margin: 15px 0 0;
+  padding: 0;
   list-style: none;
 }
 
@@ -771,11 +769,17 @@ footer {
 .skills-orbit {
   grid-column: auto;
   min-height: 430px;
-  padding: 40px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .skills-orbit > .mini-label {
-  margin-bottom: 35px;
+  margin-bottom: 15px;
 }
 
 .skill-group {
@@ -783,8 +787,9 @@ footer {
   grid-template-columns: 110px 1fr;
   gap: 20px;
   align-items: start;
-  margin-top: 8px;
-  padding: 14px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 16px 18px;
   border: 1px solid rgba(var(--accent-rgb), 0.14);
   border-radius: 18px;
   background: rgba(var(--accent-rgb), 0.055);
@@ -901,13 +906,10 @@ footer {
 
 .mission-content ul {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   max-width: 730px;
   margin: 25px 0 0;
-  padding: 10px;
-  border: 1px solid rgba(var(--accent-rgb), 0.13);
-  border-radius: 20px;
-  background: rgba(var(--space-rgb), 0.26);
+  padding: 0;
   list-style: none;
 }
 
@@ -936,11 +938,8 @@ footer {
 .impact-orbit {
   display: grid;
   align-content: center;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid rgba(var(--accent-rgb), 0.16);
-  border-radius: 22px;
-  background: rgba(var(--space-rgb), 0.26);
+  gap: 12px;
+  padding: 0;
 }
 
 .impact-orbit div {
@@ -1575,7 +1574,7 @@ footer {
   }
 
   .skills-orbit {
-    padding: 28px;
+    padding: 0;
   }
 
   .skill-group {
@@ -1610,7 +1609,7 @@ footer {
   .impact-orbit {
     grid-template-columns: 1fr 1fr;
     margin-top: 26px;
-    padding: 10px;
+    padding: 0;
   }
 
   .project-card,
