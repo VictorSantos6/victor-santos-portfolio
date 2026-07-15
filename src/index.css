@@ -8,20 +8,25 @@
   --font-hud: 'Chakra Petch', 'Space Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   font-family: var(--font-body);
-  color: #f2f7fb;
-  background: #03050a;
+  color: #f4f7f6;
+  background: #0a192f;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --ink: #f2f7fb;
-  --muted: #9cacbd;
-  --subtle: #6f8192;
-  --cyan: #62f5ff;
-  --blue: #5c7cff;
-  --amber: #ffb45f;
-  --violet: #a78bfa;
-  --surface: rgba(8, 15, 26, 0.74);
-  --line: rgba(168, 211, 235, 0.2);
+  --ink: #f4f7f6;
+  --muted: #e0f4ff;
+  --subtle: #4a90e2;
+  --cyan: #4a90e2;
+  --blue: #e0f4ff;
+  --amber: #ff6b35;
+  --violet: #4a90e2;
+  --cta: #ff6b35;
+  --surface: rgba(224, 244, 255, 0.08);
+  --surface-strong: rgba(10, 25, 47, 0.94);
+  --line: rgba(74, 144, 226, 0.3);
+  --accent-rgb: 74, 144, 226;
+  --cta-rgb: 255, 107, 53;
+  --space-rgb: 10, 25, 47;
 }
 
 * {
@@ -31,7 +36,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #03050a;
+  background: #0a192f;
 }
 
 body {
@@ -39,7 +44,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background: #03050a;
+  background: #0a192f;
 }
 
 body,
@@ -89,12 +94,12 @@ button {
 }
 
 ::selection {
-  color: #021117;
-  background: var(--cyan);
+  color: #0a192f;
+  background: var(--cta);
 }
 
 :focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--cta);
   outline-offset: 4px;
 }
 

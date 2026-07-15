@@ -1,4 +1,4 @@
-import { Line, useTexture } from '@react-three/drei'
+import { Line } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { memo, useMemo, useRef } from 'react'
 import * as THREE from 'three'
@@ -37,7 +37,7 @@ function StarField({ count }: { count: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color="#d9f8ff" size={0.032} sizeAttenuation transparent opacity={0.72} />
+      <pointsMaterial color="#f4f7f6" size={0.032} sizeAttenuation transparent opacity={0.76} />
     </points>
   )
 }
@@ -65,14 +65,14 @@ function LidarCloud() {
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         </bufferGeometry>
-        <pointsMaterial color="#62f5ff" size={0.038} sizeAttenuation transparent opacity={0.9} />
+        <pointsMaterial color="#4a90e2" size={0.038} sizeAttenuation transparent opacity={0.88} />
       </points>
       <Line
         points={[
           [-1.5, 0, 0],
           [1.5, 0, 0],
         ]}
-        color="#62f5ff"
+        color="#4a90e2"
         lineWidth={0.45}
         transparent
         opacity={0.35}
@@ -82,15 +82,15 @@ function LidarCloud() {
 }
 
 const beaconColors: Record<string, string> = {
-  'flash-cards': '#62f5ff',
-  'esports-organizer': '#5c7cff',
-  'vehicle-reservation': '#ffb45f',
-  'space-invaders': '#a78bfa',
+  'flash-cards': '#4a90e2',
+  'esports-organizer': '#e0f4ff',
+  'vehicle-reservation': '#ff6b35',
+  'space-invaders': '#4a90e2',
 }
 
 function ProjectBeacons({ activeProjectId }: { activeProjectId: string | null }) {
   const group = useRef<THREE.Group>(null)
-  const selectedColor = activeProjectId ? beaconColors[activeProjectId] : '#5c7cff'
+  const selectedColor = activeProjectId ? beaconColors[activeProjectId] : '#4a90e2'
 
   useFrame((_, delta) => {
     if (group.current) group.current.rotation.y += delta * 0.08
@@ -104,11 +104,11 @@ function ProjectBeacons({ activeProjectId }: { activeProjectId: string | null })
       </mesh>
       <mesh position={[-0.9, -0.2, 0.15]} rotation={[0.4, 0.7, 0]}>
         <boxGeometry args={[0.48, 0.48, 0.48]} />
-        <meshStandardMaterial color="#62f5ff" emissive="#138eaa" emissiveIntensity={0.7} wireframe />
+        <meshStandardMaterial color="#4a90e2" emissive="#4a90e2" emissiveIntensity={0.65} wireframe />
       </mesh>
       <mesh position={[0.9, -0.3, -0.1]} rotation={[0.2, 0, 0.8]}>
         <torusGeometry args={[0.32, 0.07, 8, 24]} />
-        <meshStandardMaterial color="#ffb45f" emissive="#ff8a3d" emissiveIntensity={0.8} />
+        <meshStandardMaterial color="#ff6b35" emissive="#ff6b35" emissiveIntensity={0.62} />
       </mesh>
       <Line
         points={[
@@ -126,16 +126,29 @@ function ProjectBeacons({ activeProjectId }: { activeProjectId: string | null })
   )
 }
 
-function Planet() {
+function Planet({ reducedMotion }: { reducedMotion: boolean }) {
   const planet = useRef<THREE.Group>(null)
-  const texture = useTexture('/planet.webp')
+  const glowMaterial = useRef<THREE.MeshBasicMaterial>(null)
+  const dotMaterial = useRef<THREE.PointsMaterial>(null)
+  const scanLine = useRef<THREE.Group>(null)
 
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.minFilter = THREE.LinearFilter
-  texture.magFilter = THREE.LinearFilter
+  useFrame(({ clock }, delta) => {
+    if (reducedMotion) return
 
-  useFrame((_, delta) => {
-    if (planet.current) planet.current.rotation.y += delta * 0.035
+    if (planet.current) planet.current.rotation.y += delta * 0.025
+    if (glowMaterial.current) {
+      glowMaterial.current.opacity = 0.045 + Math.sin(clock.elapsedTime * 0.7) * 0.018
+    }
+    if (dotMaterial.current) {
+      dotMaterial.current.opacity = 0.28 + Math.sin(clock.elapsedTime * 1.15) * 0.12
+    }
+    if (scanLine.current) {
+      const scanProgress = (clock.elapsedTime * 0.12) % 1
+      const y = THREE.MathUtils.lerp(-1.42, 1.42, scanProgress)
+      const width = Math.sqrt(Math.max(0, 1 - (y / 1.48) ** 2))
+      scanLine.current.position.y = y
+      scanLine.current.scale.x = Math.max(0.08, width)
+    }
   })
 
   const orbit = useMemo(() => {
@@ -149,19 +162,74 @@ function Planet() {
 
   return (
     <group ref={planet} position={[2.65, 0.1, -2.3]} rotation={[0.12, 0, -0.18]}>
-      <sprite scale={[3.38, 3.38, 1]}>
-        <spriteMaterial
-          map={texture}
+      <mesh scale={1.24}>
+        <sphereGeometry args={[1.62, 32, 32]} />
+        <meshBasicMaterial
+          ref={glowMaterial}
+          color="#4a90e2"
           transparent
-          alphaTest={0.025}
+          opacity={0.045}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
           depthWrite={false}
-          toneMapped={false}
         />
-      </sprite>
-      <Line points={orbit} color="#4ed9ff" lineWidth={0.45} transparent opacity={0.38} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[1.62, 48, 48]} />
+        <meshStandardMaterial color="#0a192f" roughness={0.82} metalness={0.1} />
+      </mesh>
+      <mesh scale={1.045}>
+        <sphereGeometry args={[1.62, 32, 32]} />
+        <meshBasicMaterial color="#4a90e2" transparent opacity={0.11} wireframe />
+      </mesh>
+      <mesh scale={1.09}>
+        <sphereGeometry args={[1.62, 32, 32]} />
+        <meshBasicMaterial
+          color="#e0f4ff"
+          transparent
+          opacity={0.11}
+          side={THREE.BackSide}
+        />
+      </mesh>
+      <points scale={1.052}>
+        <sphereGeometry args={[1.62, 22, 18]} />
+        <pointsMaterial
+          ref={dotMaterial}
+          color="#e0f4ff"
+          size={0.022}
+          sizeAttenuation
+          transparent
+          opacity={0.28}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+      <group ref={scanLine} position={[0, -1.42, 1.57]}>
+        <Line
+          points={[
+            [-1.45, 0, 0],
+            [1.45, 0, 0],
+          ]}
+          color="#e0f4ff"
+          lineWidth={0.7}
+          transparent
+          opacity={0.42}
+        />
+        <Line
+          points={[
+            [-1.45, -0.025, 0],
+            [1.45, -0.025, 0],
+          ]}
+          color="#4a90e2"
+          lineWidth={2.4}
+          transparent
+          opacity={0.08}
+        />
+      </group>
+      <Line points={orbit} color="#4a90e2" lineWidth={0.45} transparent opacity={0.38} />
       <mesh position={[2.15, 0.08, 0]}>
         <sphereGeometry args={[0.1, 16, 16]} />
-        <meshBasicMaterial color="#ffb45f" />
+        <meshBasicMaterial color="#ff6b35" />
       </mesh>
     </group>
   )
@@ -201,7 +269,7 @@ function SceneRig({
   return (
     <group ref={world}>
       <StarField count={mobile ? 650 : 1250} />
-      <Planet />
+      <Planet reducedMotion={reducedMotion} />
       <LidarCloud />
       <ProjectBeacons activeProjectId={activeProjectId} />
     </group>
@@ -216,12 +284,12 @@ function SpaceScene(props: SpaceSceneProps) {
       dpr={props.mobile ? [1, 1.25] : [1, 1.75]}
       gl={{ alpha: true, antialias: !props.mobile, powerPreference: 'high-performance' }}
     >
-      <color attach="background" args={['#03050a']} />
-      <fog attach="fog" args={['#03050a', 8, 26]} />
-      <ambientLight intensity={0.32} color="#6b8fb8" />
-      <directionalLight position={[-4, 5, 5]} color="#dffcff" intensity={2.1} />
-      <pointLight position={[4, 1, 2]} color="#397cff" intensity={26} distance={10} />
-      <pointLight position={[-4, -2, 0]} color="#62f5ff" intensity={16} distance={8} />
+      <color attach="background" args={['#0a192f']} />
+      <fog attach="fog" args={['#0a192f', 8, 26]} />
+      <ambientLight intensity={0.32} color="#4a90e2" />
+      <directionalLight position={[-4, 5, 5]} color="#f4f7f6" intensity={2.05} />
+      <pointLight position={[4, 1, 2]} color="#ff6b35" intensity={22} distance={10} />
+      <pointLight position={[-4, -2, 0]} color="#4a90e2" intensity={15} distance={8} />
       <SceneRig {...props} />
     </Canvas>
   )
