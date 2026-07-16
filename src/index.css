@@ -24,9 +24,18 @@
   --surface: rgba(224, 244, 255, 0.08);
   --surface-strong: rgba(10, 25, 47, 0.94);
   --line: rgba(74, 144, 226, 0.3);
+  --theme-primary: #4a90e2;
+  --theme-secondary: #ff6b35;
+  --theme-glow: #e0f4ff;
+  --theme-background: #0a192f;
+  --theme-surface: #102642;
+  --theme-text: #f4f7f6;
+  --theme-muted: #d6ebfa;
   --accent-rgb: 74, 144, 226;
   --cta-rgb: 255, 107, 53;
+  --glow-rgb: 224, 244, 255;
   --space-rgb: 10, 25, 47;
+  --surface-rgb: 16, 38, 66;
 }
 
 * {
@@ -36,7 +45,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #0a192f;
+  background: var(--theme-background);
 }
 
 body {
@@ -44,7 +53,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background: #0a192f;
+  background: var(--theme-background);
 }
 
 body,
@@ -94,7 +103,7 @@ button {
 }
 
 ::selection {
-  color: #0a192f;
+  color: var(--theme-background);
   background: var(--cta);
 }
 

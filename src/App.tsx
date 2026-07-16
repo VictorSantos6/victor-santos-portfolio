@@ -17,6 +17,8 @@ import { ProjectDialog } from './components/ProjectDialog'
 import { contact, education, experiences, projects, skillGroups } from './data/portfolio'
 import { useReducedMotion } from './hooks/useReducedMotion'
 import { useWebGL } from './hooks/useWebGL'
+import { sectionThemes, themeCssVariables } from './theme'
+import type { SectionId, ThemeCSSProperties } from './theme'
 import type { Project } from './types'
 
 const SpaceScene = lazy(() => import('./components/SpaceScene'))
@@ -28,8 +30,6 @@ const navigationItems = [
   { id: 'projects', label: 'Projects' },
   { id: 'contact', label: 'Contact' },
 ] as const
-
-type SectionId = (typeof navigationItems)[number]['id']
 
 function projectFromHash(): Project | null {
   const id = window.location.hash.replace('#project-', '')
@@ -43,7 +43,11 @@ function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('top')
   const [selectedProject, setSelectedProject] = useState<Project | null>(() => projectFromHash())
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches)
+  const appShell = useRef<HTMLDivElement>(null)
+  const atmosphereVeil = useRef<HTMLDivElement>(null)
+  const previousSection = useRef<SectionId>('top')
   const lastTrigger = useRef<HTMLButtonElement | null>(null)
+  const activeTheme = sectionThemes[activeSection]
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 720px)')
@@ -104,6 +108,45 @@ function App() {
     return () => context.revert()
   }, [reducedMotion])
 
+  useLayoutEffect(() => {
+    const shell = appShell.current
+    const veil = atmosphereVeil.current
+    if (!shell) return
+
+    const variables = themeCssVariables(activeTheme)
+    const sectionChanged = previousSection.current !== activeSection
+
+    gsap.killTweensOf(shell)
+
+    if (reducedMotion) {
+      gsap.set(shell, variables)
+      if (veil) gsap.set(veil, { autoAlpha: 0, xPercent: 0 })
+    } else {
+      gsap.to(shell, {
+        ...variables,
+        duration: sectionChanged ? 1.2 : 0,
+        ease: 'expo.inOut',
+        overwrite: true,
+      })
+
+      if (veil && sectionChanged) {
+        gsap.killTweensOf(veil)
+        gsap.timeline()
+          .set(veil, { autoAlpha: 0, xPercent: -125 })
+          .to(veil, { autoAlpha: 0.68, duration: 0.2, ease: 'power2.out' })
+          .to(veil, { xPercent: 125, duration: 1.05, ease: 'expo.inOut' }, 0)
+          .to(veil, { autoAlpha: 0, duration: 0.28, ease: 'power2.in' }, 0.86)
+      }
+    }
+
+    previousSection.current = activeSection
+
+    return () => {
+      gsap.killTweensOf(shell)
+      if (veil) gsap.killTweensOf(veil)
+    }
+  }, [activeSection, activeTheme, reducedMotion])
+
   const openProject = (project: Project, trigger: HTMLButtonElement) => {
     lastTrigger.current = trigger
     setSelectedProject(project)
@@ -116,10 +159,19 @@ function App() {
     window.setTimeout(() => lastTrigger.current?.focus(), 0)
   }, [])
 
-  const progressStyle = { '--scroll-progress': `${scrollProgress * 100}%` } as React.CSSProperties
+  const progressStyle: ThemeCSSProperties = {
+    ...themeCssVariables(sectionThemes.top),
+    '--scroll-progress': `${scrollProgress * 100}%`,
+  }
 
   return (
-    <div className="app-shell" style={progressStyle}>
+    <div
+      className="app-shell"
+      data-planet={activeTheme.planet.variant}
+      data-section={activeSection}
+      ref={appShell}
+      style={progressStyle}
+    >
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -130,6 +182,8 @@ function App() {
             <SpaceScene
               progress={scrollProgress}
               activeProjectId={selectedProject?.id ?? null}
+              activeSection={activeSection}
+              theme={activeTheme}
               reducedMotion={reducedMotion}
               mobile={mobile}
             />
@@ -137,6 +191,7 @@ function App() {
         ) : (
           <div className="css-space-fallback" />
         )}
+        <div className="atmosphere-veil" ref={atmosphereVeil} />
       </div>
 
       <div className="noise-layer" aria-hidden="true" />

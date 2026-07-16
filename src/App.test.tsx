@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
+import { sectionThemes, themeCssVariables } from './theme'
 
 afterEach(() => {
   cleanup()
@@ -9,6 +10,25 @@ afterEach(() => {
 })
 
 describe('portfolio experience', () => {
+  it('maps every portfolio chapter to its planetary atmosphere', () => {
+    expect(Object.fromEntries(
+      Object.entries(sectionThemes).map(([section, theme]) => [section, theme.planet.variant]),
+    )).toEqual({
+      top: 'exoplanet',
+      profile: 'earth',
+      experience: 'mars',
+      projects: 'neptune',
+      contact: 'moon',
+    })
+
+    expect(themeCssVariables(sectionThemes.profile)).toMatchObject({
+      '--cyan': '#38bdf8',
+      '--cta': '#4ade80',
+      '--accent-rgb': '56, 189, 248',
+      '--space-rgb': '6, 26, 36',
+    })
+  })
+
   it('renders verified resume content and primary contact links', () => {
     render(<App />)
 
@@ -26,6 +46,8 @@ describe('portfolio experience', () => {
     )
     expect(screen.getByRole('banner')).toHaveClass('site-header--hero')
     expect(screen.getByRole('link', { name: 'Intro' })).toHaveAttribute('aria-current', 'location')
+    expect(document.querySelector('.app-shell')).toHaveAttribute('data-planet', 'exoplanet')
+    expect(document.querySelector('.css-space-fallback')).toBeInTheDocument()
   })
 
   it('opens project cases through a deep-linkable dialog and closes with Escape', async () => {

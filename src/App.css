@@ -3,6 +3,8 @@
   min-height: 100vh;
   isolation: isolate;
   overflow: clip;
+  color: var(--theme-text);
+  background: var(--theme-background);
 }
 
 .app-shell::before {
@@ -13,14 +15,15 @@
   content: '';
   background:
     linear-gradient(90deg, rgba(var(--space-rgb), 0.94) 0%, rgba(var(--space-rgb), 0.62) 37%, rgba(var(--space-rgb), 0.08) 69%, rgba(var(--space-rgb), 0.48) 100%),
-    linear-gradient(180deg, rgba(var(--space-rgb), 0.05), #0a192f 96%);
+    linear-gradient(180deg, rgba(var(--space-rgb), 0.05), var(--theme-background) 96%);
 }
 
 .space-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: #0a192f;
+  overflow: hidden;
+  background: var(--theme-background);
 }
 
 .scene-loader,
@@ -32,7 +35,7 @@
 .scene-loader {
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 72% 35%, rgba(74, 144, 226, 0.38), #0a192f 48%);
+  background: radial-gradient(circle at 72% 35%, rgba(var(--accent-rgb), 0.38), var(--theme-background) 48%);
 }
 
 .scene-loader span {
@@ -46,10 +49,10 @@
 
 .css-space-fallback {
   background:
-    radial-gradient(circle at 74% 28%, rgba(74, 144, 226, 0.46) 0 8%, transparent 30%),
-    radial-gradient(circle at 82% 40%, rgba(224, 244, 255, 0.2), transparent 19%),
-    radial-gradient(circle at 20% 72%, rgba(255, 107, 53, 0.1), transparent 25%),
-    #0a192f;
+    radial-gradient(circle at 74% 28%, rgba(var(--accent-rgb), 0.46) 0 8%, transparent 30%),
+    radial-gradient(circle at 82% 40%, rgba(var(--glow-rgb), 0.2), transparent 19%),
+    radial-gradient(circle at 20% 72%, rgba(var(--cta-rgb), 0.1), transparent 25%),
+    var(--theme-background);
 }
 
 .css-space-fallback::before,
@@ -59,10 +62,28 @@
   content: '';
   opacity: 0.48;
   background-image:
-    radial-gradient(circle, #f4f7f6 0 1px, transparent 1.4px),
-    radial-gradient(circle, #e0f4ff 0 1px, transparent 1.4px);
+    radial-gradient(circle, var(--theme-text) 0 1px, transparent 1.4px),
+    radial-gradient(circle, var(--theme-glow) 0 1px, transparent 1.4px);
   background-position: 0 0, 42px 72px;
   background-size: 130px 130px, 180px 180px;
+}
+
+.atmosphere-veil {
+  position: absolute;
+  z-index: 3;
+  top: -20%;
+  bottom: -20%;
+  left: 15%;
+  width: 70%;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(105deg, transparent 3%, rgba(var(--accent-rgb), 0.12) 28%, rgba(var(--glow-rgb), 0.42) 49%, rgba(var(--cta-rgb), 0.18) 68%, transparent 96%),
+    radial-gradient(ellipse at center, rgba(var(--accent-rgb), 0.32), transparent 66%);
+  filter: blur(34px) saturate(1.25);
+  mix-blend-mode: screen;
+  transform: translate3d(-125%, 0, 0) skewX(-9deg);
+  will-change: transform, opacity;
 }
 
 .noise-layer {
@@ -80,7 +101,7 @@
   top: 12px;
   left: 12px;
   padding: 12px 18px;
-  color: #0a192f;
+  color: var(--theme-background);
   background: var(--cta);
   border-radius: 6px;
   transform: translateY(-150%);
@@ -261,7 +282,7 @@
   display: grid;
   justify-items: center;
   gap: 9px;
-  color: rgba(224, 244, 255, 0.64);
+  color: rgba(var(--glow-rgb), 0.72);
   font-family: var(--font-hud);
   font-size: 8px;
   letter-spacing: 0.14em;
@@ -328,7 +349,7 @@ footer {
 
 .hero::after {
   inset: 9% 0 5%;
-  background-image: radial-gradient(circle, rgba(224, 244, 255, 0.34) 0 0.65px, transparent 0.8px);
+  background-image: radial-gradient(circle, rgba(var(--glow-rgb), 0.34) 0 0.65px, transparent 0.8px);
   background-size: 28px 28px;
   mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.18) 58%, transparent 88%);
   opacity: 0.13;
@@ -479,7 +500,7 @@ footer {
 
 .primary-button {
   padding: 0 20px;
-  color: #0a192f;
+  color: var(--theme-background);
   border: 1px solid var(--cta);
   border-radius: 4px;
   background: var(--cta);
@@ -619,7 +640,7 @@ footer {
   border-radius: 30px;
   background:
     radial-gradient(circle at 92% 6%, rgba(var(--accent-rgb), 0.12), transparent 34%),
-    linear-gradient(145deg, rgba(224, 244, 255, 0.1), rgba(var(--space-rgb), 0.88));
+    linear-gradient(145deg, rgba(var(--glow-rgb), 0.1), rgba(var(--space-rgb), 0.88));
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   backdrop-filter: blur(22px);
 }
@@ -680,7 +701,7 @@ footer {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 30px;
-  color: rgba(224, 244, 255, 0.82);
+  color: rgba(var(--glow-rgb), 0.82);
   font-family: var(--font-hud);
   font-size: 10px;
   letter-spacing: 0.06em;
@@ -704,7 +725,7 @@ footer {
   border-color: rgba(var(--cta-rgb), 0.4);
   background:
     radial-gradient(circle at 84% 12%, rgba(var(--cta-rgb), 0.16), transparent 38%),
-    linear-gradient(145deg, rgba(224, 244, 255, 0.08), rgba(var(--space-rgb), 0.9));
+    linear-gradient(145deg, rgba(var(--glow-rgb), 0.08), rgba(var(--space-rgb), 0.9));
 }
 
 .gpa-card span,
@@ -851,7 +872,7 @@ footer {
   border-radius: 30px;
   background:
     radial-gradient(circle at 94% 0%, rgba(var(--accent-rgb), 0.12), transparent 32%),
-    linear-gradient(120deg, rgba(224, 244, 255, 0.09), rgba(var(--space-rgb), 0.88));
+    linear-gradient(120deg, rgba(var(--glow-rgb), 0.09), rgba(var(--space-rgb), 0.88));
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(22px);
 }
@@ -863,7 +884,7 @@ footer {
   border-color: rgba(var(--accent-rgb), 0.4);
   background:
     radial-gradient(circle at 92% 8%, rgba(var(--accent-rgb), 0.16), transparent 35%),
-    linear-gradient(120deg, rgba(74, 144, 226, 0.18), rgba(var(--space-rgb), 0.9));
+    linear-gradient(120deg, rgba(var(--accent-rgb), 0.18), rgba(var(--space-rgb), 0.9));
 }
 
 .mission-number {
@@ -925,7 +946,7 @@ footer {
 .mission-content li {
   position: relative;
   padding: 11px 14px 11px 34px;
-  color: rgba(224, 244, 255, 0.7);
+  color: rgba(var(--glow-rgb), 0.74);
   border: 1px solid rgba(var(--accent-rgb), 0.12);
   border-radius: 13px;
   background: rgba(var(--accent-rgb), 0.05);
@@ -1001,7 +1022,7 @@ footer {
   border-radius: 30px;
   background:
     radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--accent-color), transparent 88%), transparent 36%),
-    linear-gradient(145deg, rgba(224, 244, 255, 0.1), rgba(var(--space-rgb), 0.9));
+    linear-gradient(145deg, rgba(var(--glow-rgb), 0.1), rgba(var(--space-rgb), 0.9));
   box-shadow: 0 30px 85px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   backdrop-filter: blur(22px);
   transition: transform 220ms ease-out, border-color 220ms ease-out, box-shadow 220ms ease-out, background-color 220ms ease-out;
@@ -1041,7 +1062,7 @@ footer {
 .accent-violet { --accent-color: var(--violet); }
 
 .project-index {
-  color: rgba(224, 244, 255, 0.72);
+  color: rgba(var(--glow-rgb), 0.76);
   font-family: var(--font-mono);
   font-size: 11px;
 }
@@ -1247,7 +1268,7 @@ footer {
   padding: clamp(26px, 5vw, 54px);
   overflow-y: auto;
   border: 1px solid color-mix(in srgb, var(--accent-color), transparent 42%);
-  background: linear-gradient(140deg, rgba(224, 244, 255, 0.1), rgba(var(--space-rgb), 0.99));
+  background: linear-gradient(140deg, rgba(var(--glow-rgb), 0.1), rgba(var(--space-rgb), 0.99));
   box-shadow: 0 50px 140px rgba(0, 0, 0, 0.72), 0 0 80px color-mix(in srgb, var(--accent-color), transparent 90%);
   clip-path: polygon(0 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 0 100%);
   animation: dialog-in 280ms ease-out both;
@@ -1424,6 +1445,12 @@ footer {
 }
 
 @media (max-width: 720px) {
+  .atmosphere-veil {
+    left: 0;
+    width: 100%;
+    filter: blur(24px) saturate(1.18);
+  }
+
   .app-shell::before {
     background: linear-gradient(180deg, rgba(var(--space-rgb), 0.32), rgba(var(--space-rgb), 0.82) 28%, rgba(var(--space-rgb), 0.97) 80%);
   }
@@ -1722,6 +1749,10 @@ footer {
   .contact-radar span:nth-of-type(3),
   .scene-loader span {
     animation: none;
+  }
+
+  .atmosphere-veil {
+    display: none;
   }
 
   .hero-telemetry strong {
