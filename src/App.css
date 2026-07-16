@@ -1266,6 +1266,7 @@ footer {
   width: min(850px, 100%);
   max-height: min(780px, calc(100svh - 48px));
   padding: clamp(26px, 5vw, 54px);
+  overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid color-mix(in srgb, var(--accent-color), transparent 42%);
   background: linear-gradient(140deg, rgba(var(--glow-rgb), 0.1), rgba(var(--space-rgb), 0.99));
@@ -1277,8 +1278,8 @@ footer {
 .dialog-orbit {
   position: absolute;
   top: -110px;
-  right: -110px;
-  width: 280px;
+  right: -1px;
+  width: 170px;
   height: 280px;
   pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--accent-color), transparent 65%);
@@ -1473,13 +1474,16 @@ footer {
   .site-header nav {
     flex: 1;
     justify-content: flex-end;
+    gap: 2px;
   }
 
   .site-header nav a {
-    min-height: 42px;
-    padding: 12px 8px;
-    font-size: 8px;
-    letter-spacing: 0.08em;
+    min-height: 44px;
+    justify-content: center;
+    padding: 11px 8px;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    touch-action: manipulation;
   }
 
   .nav-active-dot {
@@ -1501,12 +1505,14 @@ footer {
 
   .chapter {
     min-height: auto;
-    padding: 120px 0 80px;
+    padding: 96px 0 64px;
   }
 
   .hero {
-    min-height: 100svh;
-    padding-top: 110px;
+    min-height: auto;
+    align-items: flex-start;
+    padding-top: 96px;
+    padding-bottom: 56px;
   }
 
   .hero-grid {
@@ -1514,13 +1520,14 @@ footer {
   }
 
   .hero-kicker {
-    margin-bottom: 34px;
+    margin-bottom: 24px;
     padding: 7px 10px;
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .hero h1 {
-    font-size: clamp(3.1rem, 14vw, 4.6rem);
+    font-size: clamp(2.75rem, 12vw, 3.5rem);
+    line-height: 0.92;
   }
 
   .hero h1 span {
@@ -1537,18 +1544,28 @@ footer {
   }
 
   .hero-summary {
-    max-width: 94%;
+    max-width: 100%;
+    margin-top: 24px;
     font-size: 1rem;
+    line-height: 1.62;
   }
 
   .hero-actions {
     align-items: flex-start;
     flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
   }
 
   .hero-telemetry {
     width: 100%;
-    margin: 50px 0 0;
+    margin: 32px 0 0;
+    gap: 8px;
+  }
+
+  .hero-telemetry div {
+    min-height: 52px;
+    padding: 11px 13px;
   }
 
   .scroll-cue {
@@ -1557,7 +1574,13 @@ footer {
 
   .section-heading h2,
   .contact-copy h2 {
-    font-size: clamp(3rem, 14.5vw, 4.6rem);
+    font-size: clamp(2.65rem, 11.5vw, 3.5rem);
+    line-height: 0.92;
+  }
+
+  .section-deck {
+    margin-top: 20px;
+    line-height: 1.62;
   }
 
   .align-right .section-deck {
@@ -1574,7 +1597,7 @@ footer {
     display: grid;
     grid-template-columns: 1fr;
     gap: 14px;
-    margin-top: 64px;
+    margin-top: 44px;
   }
 
   .education-card,
@@ -1587,26 +1610,44 @@ footer {
   }
 
   .education-card {
-    min-height: 300px;
-    padding: 28px;
+    min-height: 260px;
+    padding: 24px;
   }
 
   .panel-icon {
-    margin-bottom: 38px;
+    margin-bottom: 24px;
+  }
+
+  .glass-panel,
+  .telemetry-card,
+  .mission-card,
+  .project-card {
+    border-radius: 22px;
   }
 
   .education-meta {
+    margin-top: 22px;
     align-items: flex-start;
     flex-direction: column;
     gap: 9px;
   }
 
   .gpa-card {
-    min-height: 215px;
+    min-height: 180px;
+    padding: 24px;
+  }
+
+  .gpa-card strong {
+    font-size: 3.5rem;
   }
 
   .course-card {
     min-height: auto;
+  }
+
+  .course-card > .mini-label,
+  .skills-orbit > .mini-label {
+    margin-bottom: 18px;
   }
 
   .skills-orbit {
@@ -1614,7 +1655,9 @@ footer {
   }
 
   .skill-group {
-    grid-template-columns: 78px 1fr;
+    grid-template-columns: 70px 1fr;
+    gap: 12px;
+    padding: 14px;
   }
 
   .experience-section {
@@ -1622,18 +1665,19 @@ footer {
   }
 
   .mission-stack {
-    margin-top: 68px;
+    gap: 14px;
+    margin-top: 48px;
   }
 
   .mission-card,
   .mission-card.featured {
     display: block;
-    padding: 26px 22px;
+    padding: 24px 20px;
     clip-path: none;
   }
 
   .mission-number {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
   }
 
   .mission-title-row {
@@ -1644,13 +1688,23 @@ footer {
 
   .impact-orbit {
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
     margin-top: 26px;
     padding: 0;
   }
 
+  .impact-orbit div {
+    padding: 14px;
+  }
+
+  .impact-orbit strong {
+    font-size: 2.2rem;
+  }
+
   .project-card,
   .project-card:nth-child(n):hover {
-    min-height: 310px;
+    min-height: 288px;
+    padding: 24px;
     transform: none;
   }
 
@@ -1659,30 +1713,48 @@ footer {
   }
 
   .project-signal {
-    margin-top: 38px;
+    margin-top: 0;
   }
 
   .contact-section {
     display: flex;
-    min-height: 100svh;
+    min-height: auto;
     flex-direction: column-reverse;
     align-items: flex-start;
     justify-content: center;
-    gap: 60px;
+    gap: 40px;
+    padding-top: 96px;
+    padding-bottom: 72px;
   }
 
   .contact-radar {
-    width: min(72vw, 300px);
+    width: min(64vw, 250px);
     align-self: center;
   }
 
   .contact-actions {
     align-items: flex-start;
     flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .contact-copy > p:not(.chapter-index) {
+    margin-top: 22px;
+    line-height: 1.62;
+  }
+
+  .email-display {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    margin-top: 28px;
+    overflow-wrap: anywhere;
+    touch-action: manipulation;
   }
 
   footer {
-    min-height: 190px;
+    min-height: 168px;
     align-items: flex-start;
     flex-direction: column;
     justify-content: center;
@@ -1696,7 +1768,26 @@ footer {
   .project-dialog {
     width: 100%;
     max-height: 92svh;
+    padding: 26px 24px;
+    overscroll-behavior: contain;
     clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%);
+  }
+
+  .dialog-orbit {
+    top: -90px;
+    right: -1px;
+    width: 140px;
+    height: 230px;
+  }
+
+  .dialog-header h2 {
+    font-size: clamp(2.25rem, 12vw, 3.25rem);
+  }
+
+  .dialog-meta {
+    min-width: 0;
+    margin-top: 24px;
+    overflow-wrap: anywhere;
   }
 
   .dialog-grid,
@@ -1706,35 +1797,117 @@ footer {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 520px) {
   .site-header .brand {
     display: none;
   }
 
   .site-header nav {
+    width: 100%;
     justify-content: space-between;
   }
 
   .site-header nav a {
-    padding: 12px 5px;
-  }
-
-  .hero h1 {
-    font-size: 3.1rem;
+    min-width: 0;
+    flex: 1 1 20%;
+    padding: 11px 2px;
   }
 
   .primary-button {
     width: 100%;
   }
+
+  .project-dialog {
+    padding: 24px 18px;
+  }
 }
 
-@media (max-height: 520px) and (orientation: landscape) {
+@media (max-width: 360px) {
+  .site-header nav a {
+    font-size: 9px;
+    letter-spacing: 0.025em;
+  }
+
+  .chapter,
+  footer {
+    width: calc(100% - 24px);
+  }
+
+  .hero h1 {
+    font-size: 2.75rem;
+  }
+
+  .dialog-header {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
   .site-header {
     top: 8px;
+    width: calc(100% - 28px);
+    min-height: 52px;
+    padding: 4px 10px;
+  }
+
+  .site-header .brand-copy {
+    display: none;
+  }
+
+  .site-header nav {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .site-header nav a {
+    min-height: 44px;
+    padding: 10px 9px;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  .chapter {
+    padding-top: 88px;
+    padding-bottom: 48px;
   }
 
   .hero {
-    min-height: 760px;
+    min-height: auto;
+    align-items: flex-start;
+    padding-top: 88px;
+    padding-bottom: 48px;
+  }
+
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    column-gap: 32px;
+  }
+
+  .hero-kicker {
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 7.5vw, 4rem);
+  }
+
+  .hero-summary {
+    margin-top: 18px;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .hero-actions {
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .hero-telemetry {
+    margin-bottom: 0;
+  }
+
+  .scroll-cue {
+    display: none;
   }
 
   .project-dialog {
