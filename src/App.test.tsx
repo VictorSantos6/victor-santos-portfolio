@@ -32,7 +32,7 @@ describe('portfolio experience', () => {
   it('renders verified resume content and primary contact links', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { level: 1, name: /engineering systems that move/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /i build software and learn by shipping it/i })).toBeInTheDocument()
     expect(screen.getByText('LiDRON Research')).toBeInTheDocument()
     expect(screen.getByText('50%')).toBeInTheDocument()
     expect(screen.getByText('100%')).toBeInTheDocument()
@@ -73,6 +73,6 @@ describe('portfolio experience', () => {
     render(<App />)
 
     expect(screen.getByRole('dialog', { name: /space invaders/i })).toBeInTheDocument()
-    expect(screen.getByText(/working without external libraries/i)).toBeInTheDocument()
+    expect(screen.getByText(/without external libraries/i)).toBeInTheDocument()
   })
 })

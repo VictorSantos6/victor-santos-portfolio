@@ -22,13 +22,13 @@ export const experiences: Experience[] = [
     role: 'Developer',
     location: 'Mayagüez, PR',
     period: 'May 2026 — Present',
-    eyebrow: 'Autonomous systems · Primary mission',
+    eyebrow: 'Autonomous systems research',
     summary:
-      'Contributing to a Lockheed Martin-sponsored research initiative focused on automating drone landing to reduce human error.',
+      'I’m helping build software for a Lockheed Martin-sponsored research project on autonomous drone landing.',
     highlights: [
-      'Engineered a cross-platform pipeline between macOS ARM64 and Ubuntu/Docker with volume-mapped source synchronization.',
-      'Reduced build-test iteration cycles by 50% while maintaining 100% environment parity.',
-      'Developed a real-time LiDAR perception pipeline in Python with signal-processing filters for raw point-cloud data.',
+      'Set up a macOS ARM64 and Ubuntu/Docker workflow with shared source volumes so the same code runs in both environments.',
+      'Cut the build-and-test cycle by 50% while keeping the development environments in sync.',
+      'Built a real-time Python pipeline that filters raw LiDAR point-cloud data for landing detection.',
     ],
     featured: true,
   },
@@ -38,9 +38,9 @@ export const experiences: Experience[] = [
     role: 'Developer',
     location: 'Mayagüez, PR',
     period: 'Jul 2025 — Present',
-    eyebrow: 'Mobile systems · Product orbit',
+    eyebrow: 'Flutter mobile development',
     summary:
-      'Building scalable Flutter experiences with Clean Architecture and predictable state management.',
+      'I work on Flutter features for MiUni, using Clean Architecture and Cubit to keep the app organized as it grows.',
     highlights: [
       'Developed the app tutorial onboarding flow that guides users through key features after their first login.',
       'Built a Pickleball tournament module for team management and live score tracking using Flutter, Dart, and Cubit.',
@@ -52,9 +52,9 @@ export const experiences: Experience[] = [
     role: 'Technician and Programmer',
     location: 'Georgia, US',
     period: 'May 2023 — Jul 2023',
-    eyebrow: 'Robotics · Ground station',
+    eyebrow: 'Robotics competition',
     summary:
-      'Supported competition performance through hands-on robotic hardware assembly and maintenance.',
+      'I helped prepare and maintain a Scorbot robotic arm for a SkillsUSA competition.',
     highlights: [
       'Assembled and maintained Scorbot robotic-arm wiring components on the circuit board for reliable connectivity and function.',
     ],
@@ -67,11 +67,11 @@ export const projects: Project[] = [
     name: 'Flash Cards App',
     period: 'Jul 2025 — Aug 2025',
     stack: ['Flutter', 'Dart', 'BLoC/Cubit', 'Hive'],
-    signal: '01 / LEARNING SYSTEM',
+    signal: '01 / MOBILE APP',
     problem:
-      'Students and professionals need a focused study tool that remains useful without a network connection.',
+      'I wanted a simple study app that could create and review flashcards without requiring an internet connection.',
     contribution:
-      'Built a mobile flashcards application from scratch using Clean Architecture and BLoC/Cubit principles.',
+      'I built the Flutter app from scratch, organized it with Clean Architecture and Cubit, and stored decks locally with Hive.',
     outcomes: [
       'Deck creation and flashcard editing',
       'Dark and light appearance modes',
@@ -84,13 +84,13 @@ export const projects: Project[] = [
     name: 'Esports Organizer',
     period: 'Jul 2025 — Present',
     stack: ['React', 'JavaScript', 'HTML', 'Figma'],
-    signal: '02 / LIVE COMPETITION',
+    signal: '02 / WEB APP',
     problem:
-      'Tournament audiences and teams need a clearer view of live match progress, team information, and history.',
+      'The organizer needed a clearer way for players and viewers to follow brackets and look up team information.',
     contribution:
-      'Developed the Tournament Brackets Page in React and designed a responsive Team Profile Page in Figma.',
+      'I built the tournament brackets page in React and designed responsive team profile screens in Figma.',
     outcomes: [
-      'Interactive real-time match progression',
+      'Interactive bracket progression',
       'Team statistics and match-history prototype',
       'Structured GitHub commits and branches',
     ],
@@ -101,11 +101,11 @@ export const projects: Project[] = [
     name: 'Vehicle Reservation System',
     period: 'Apr 2025 — May 2025',
     stack: ['Java', 'OOP', 'Data Structures'],
-    signal: '03 / CAMPUS MOBILITY',
+    signal: '03 / JAVA COURSE PROJECT',
     problem:
-      'UPRM students need a reliable way to reserve vehicles while handling conflicts, roles, and station operations.',
+      'For a UPRM course project, I needed to model vehicle reservations, time conflicts, user roles, and station operations.',
     contribution:
-      'Created a multi-role terminal system with modular packages and object-oriented design for clients and owners.',
+      'I built a terminal-based Java system with separate client and owner flows, modular packages, and object-oriented data models.',
     outcomes: [
       'Conflict validation and waitlist management',
       'Undo and redo actions',
@@ -118,15 +118,15 @@ export const projects: Project[] = [
     name: 'Space Invaders',
     period: 'Apr 2024',
     stack: ['C++', 'Game Logic'],
-    signal: '04 / DEEP SPACE',
+    signal: '04 / C++ GAME',
     problem:
-      'An existing C++ game needed more reliable collision detection, input handling, and gameplay behavior.',
+      'This class project started with a C++ Space Invaders game that had bugs in collision detection and input handling.',
     contribution:
-      'Debugged and enhanced the game mechanics while working without external libraries.',
+      'I traced and fixed the game logic, then improved player input and collision behavior without external libraries.',
     outcomes: [
       'Refined collision detection',
       'Improved user input and game mechanics',
-      'Optimized runtime performance',
+      'Simplified game-loop logic',
     ],
     accent: 'violet',
   },
@@ -134,9 +134,9 @@ export const projects: Project[] = [
 
 export const skillGroups: SkillGroup[] = [
   { label: 'Languages', skills: ['Dart', 'Java', 'C++', 'Python', 'JavaScript'] },
-  { label: 'Interfaces', skills: ['Flutter', 'React', 'Figma'] },
-  { label: 'Systems', skills: ['Docker', 'Automation', 'Git', 'GitHub'] },
-  { label: 'Approach', skills: ['Clean Architecture', 'Teamwork', 'Testing'] },
+  { label: 'Frameworks', skills: ['Flutter', 'React', 'Firebase', 'Figma'] },
+  { label: 'Tools', skills: ['Docker', 'Git', 'GitHub', 'AI-assisted coding'] },
+  { label: 'Practices', skills: ['Clean Architecture', 'Teamwork', 'Testing'] },
 ]
 
 export const contact: Contact = {

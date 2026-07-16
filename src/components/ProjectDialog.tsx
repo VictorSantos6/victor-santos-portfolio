@@ -62,7 +62,6 @@ export function ProjectDialog({ project, onClose }: ProjectDialogProps) {
         aria-labelledby="project-dialog-title"
         aria-describedby="project-dialog-description"
       >
-        <div className="dialog-orbit" aria-hidden="true" />
         <header className="dialog-header">
           <div>
             <p className="signal-label">{project.signal}</p>
@@ -90,7 +89,7 @@ export function ProjectDialog({ project, onClose }: ProjectDialogProps) {
         </div>
 
         <section className="outcomes-panel">
-          <p className="mini-label">System outcomes</p>
+          <p className="mini-label">What it includes</p>
           <ul>
             {project.outcomes.map((outcome) => (
               <li key={outcome}>

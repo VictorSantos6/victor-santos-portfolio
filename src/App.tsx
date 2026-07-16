@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Mail,
   Orbit,
-  Radar,
 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
@@ -26,7 +25,7 @@ const SpaceScene = lazy(() => import('./components/SpaceScene'))
 const navigationItems = [
   { id: 'top', label: 'Intro' },
   { id: 'profile', label: 'Profile' },
-  { id: 'experience', label: 'Missions' },
+  { id: 'experience', label: 'Experience' },
   { id: 'projects', label: 'Projects' },
   { id: 'contact', label: 'Contact' },
 ] as const
@@ -44,7 +43,6 @@ function App() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(() => projectFromHash())
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches)
   const appShell = useRef<HTMLDivElement>(null)
-  const atmosphereVeil = useRef<HTMLDivElement>(null)
   const previousSection = useRef<SectionId>('top')
   const lastTrigger = useRef<HTMLButtonElement | null>(null)
   const activeTheme = sectionThemes[activeSection]
@@ -110,7 +108,6 @@ function App() {
 
   useLayoutEffect(() => {
     const shell = appShell.current
-    const veil = atmosphereVeil.current
     if (!shell) return
 
     const variables = themeCssVariables(activeTheme)
@@ -120,7 +117,6 @@ function App() {
 
     if (reducedMotion) {
       gsap.set(shell, variables)
-      if (veil) gsap.set(veil, { autoAlpha: 0, xPercent: 0 })
     } else {
       gsap.to(shell, {
         ...variables,
@@ -129,21 +125,12 @@ function App() {
         overwrite: true,
       })
 
-      if (veil && sectionChanged) {
-        gsap.killTweensOf(veil)
-        gsap.timeline()
-          .set(veil, { autoAlpha: 0, xPercent: -125 })
-          .to(veil, { autoAlpha: 0.68, duration: 0.2, ease: 'power2.out' })
-          .to(veil, { xPercent: 125, duration: 1.05, ease: 'expo.inOut' }, 0)
-          .to(veil, { autoAlpha: 0, duration: 0.28, ease: 'power2.in' }, 0.86)
-      }
     }
 
     previousSection.current = activeSection
 
     return () => {
       gsap.killTweensOf(shell)
-      if (veil) gsap.killTweensOf(veil)
     }
   }, [activeSection, activeTheme, reducedMotion])
 
@@ -191,7 +178,6 @@ function App() {
         ) : (
           <div className="css-space-fallback" />
         )}
-        <div className="atmosphere-veil" ref={atmosphereVeil} />
       </div>
 
       <div className="noise-layer" aria-hidden="true" />
@@ -201,7 +187,7 @@ function App() {
           <span className="brand-mark">VS</span>
           <span className="brand-copy">
             <strong>Victor Santos</strong>
-            <small>Systems in motion</small>
+            <small>CS &amp; Engineering student</small>
           </span>
         </a>
         <nav aria-label="Primary navigation">
@@ -234,22 +220,22 @@ function App() {
           <div className="hero-grid">
             <div className="hero-kicker reveal">
               <span className="live-dot" />
-              Mission control / Mayagüez, PR
+              CS &amp; Engineering student · UPRM
             </div>
 
             <div className="hero-copy reveal">
               <p className="chapter-index">00 — Introduction</p>
               <h1 id="hero-title">
-                Engineering
-                <span>systems that</span>
-                <em>move.</em>
+                I build software
+                <span>and learn by</span>
+                <em>shipping it.</em>
               </h1>
               <p className="hero-summary">
-                I’m Victor Santos, a Computer Science &amp; Engineering student building resilient software, autonomous systems, and thoughtful digital products.
+                I’m Victor Santos, a Computer Science and Engineering student at UPRM. I build mobile apps with Flutter and Firebase, web projects, and research tools—often using AI-assisted coding to learn and iterate.
               </p>
               <div className="hero-actions">
                 <a className="primary-button" href="#projects">
-                  Explore the work <ArrowRight size={18} aria-hidden="true" />
+                  View my projects <ArrowRight size={18} aria-hidden="true" />
                 </a>
                 <a className="text-link" href={contact.resume} download>
                   <Download size={17} aria-hidden="true" /> Download résumé
@@ -257,10 +243,10 @@ function App() {
               </div>
             </div>
 
-            <div className="hero-telemetry reveal" aria-label="Current telemetry">
+            <div className="hero-telemetry reveal" aria-label="Current details">
               <div>
-                <span>Focus</span>
-                <strong>Software + autonomy</strong>
+                <span>Building</span>
+                <strong>Mobile, web, and research tools</strong>
               </div>
               <div>
                 <span>Status</span>
@@ -274,21 +260,21 @@ function App() {
           </div>
 
           <a className="scroll-cue" href="#profile">
-            <span>Begin trajectory</span>
+            <span>More about me</span>
             <ArrowDown size={16} aria-hidden="true" />
           </a>
         </section>
 
         <section className="profile-section chapter" id="profile" aria-labelledby="profile-title">
           <div className="section-heading reveal">
-            <p className="chapter-index">01 — Flight profile</p>
-            <h2 id="profile-title">Built to learn.<br />Ready to contribute.</h2>
+            <p className="chapter-index">01 — About me</p>
+            <h2 id="profile-title">What I’m learning<br />and using now.</h2>
           </div>
 
           <div className="profile-orbit">
             <article className="education-card glass-panel reveal">
               <div className="panel-icon"><BookOpen aria-hidden="true" /></div>
-              <p className="mini-label">Education uplink</p>
+              <p className="mini-label">Education</p>
               <h3>{education.institution}</h3>
               <p>{education.degree}</p>
               <div className="education-meta">
@@ -300,11 +286,11 @@ function App() {
             <article className="gpa-card telemetry-card reveal">
               <span>General GPA</span>
               <strong>{education.gpa}</strong>
-              <small>Current trajectory</small>
+              <small>Current GPA</small>
             </article>
 
             <article className="course-card glass-panel reveal">
-              <p className="mini-label">Course navigation</p>
+              <p className="mini-label">Coursework</p>
               <ul>
                 {education.coursework.map((course, index) => (
                   <li key={course}><span>0{index + 1}</span>{course}</li>
@@ -313,7 +299,7 @@ function App() {
             </article>
 
             <article className="skills-orbit glass-panel reveal">
-              <p className="mini-label">Systems inventory</p>
+              <p className="mini-label">Tools and skills</p>
               {skillGroups.map((group) => (
                 <div className="skill-group" key={group.label}>
                   <p>{group.label}</p>
@@ -328,15 +314,15 @@ function App() {
 
         <section className="experience-section chapter" id="experience" aria-labelledby="experience-title">
           <div className="section-heading align-right reveal">
-            <p className="chapter-index">02 — Active missions</p>
-            <h2 id="experience-title">From point clouds<br />to product flows.</h2>
-            <p className="section-deck">Research, mobile engineering, and robotics—connected by a practical bias toward systems that work reliably.</p>
+            <p className="chapter-index">02 — Experience</p>
+            <h2 id="experience-title">Work I’ve done<br />so far.</h2>
+            <p className="section-deck">My experience so far includes autonomous-systems research, Flutter development, and hands-on robotics.</p>
           </div>
 
           <div className="mission-stack">
             {experiences.map((experience, index) => (
               <article className={`mission-card reveal ${experience.featured ? 'featured' : ''}`} key={experience.id}>
-                <div className="mission-number">M-{String(index + 1).padStart(2, '0')}</div>
+                <div className="mission-number">{String(index + 1).padStart(2, '0')}</div>
                 <div className="mission-content">
                   <p className="mini-label">{experience.eyebrow}</p>
                   <div className="mission-title-row">
@@ -362,9 +348,9 @@ function App() {
 
         <section className="projects-section chapter" id="projects" aria-labelledby="projects-title">
           <div className="section-heading reveal">
-            <p className="chapter-index">03 — Project constellation</p>
-            <h2 id="projects-title">Four signals.<br />One evolving craft.</h2>
-            <p className="section-deck">Select a transmission to inspect the challenge, contribution, and outcome.</p>
+            <p className="chapter-index">03 — Selected projects</p>
+            <h2 id="projects-title">Things I’ve built<br />while learning.</h2>
+            <p className="section-deck">Open a project to see what I built, the tools I used, and the problem I was trying to solve.</p>
           </div>
 
           <div className="project-constellation">
@@ -388,24 +374,20 @@ function App() {
                     <span key={technology}>{technology}</span>
                   ))}
                 </span>
-                <span className="project-open">Open case file <ArrowRight size={16} aria-hidden="true" /></span>
+                <span className="project-open">View project <ArrowRight size={16} aria-hidden="true" /></span>
               </button>
             ))}
           </div>
         </section>
 
         <section className="contact-section chapter" id="contact" aria-labelledby="contact-title">
-          <div className="contact-radar reveal" aria-hidden="true">
-            <Radar />
-            <span /><span /><span />
-          </div>
           <div className="contact-copy reveal">
-            <p className="chapter-index">04 — Open channel</p>
-            <h2 id="contact-title">Let’s build what’s<br />not here yet.</h2>
-            <p>I’m looking for internship opportunities where thoughtful engineering, curiosity, and real-world impact share the same orbit.</p>
+            <p className="chapter-index">04 — Get in touch</p>
+            <h2 id="contact-title">Want to work<br />together?</h2>
+            <p>I’m looking for software engineering internships where I can contribute to real projects, learn from a team, and keep improving as a developer.</p>
             <div className="contact-actions">
               <a className="primary-button" href={`mailto:${contact.email}`}>
-                <Mail size={18} aria-hidden="true" /> Start a conversation
+                <Mail size={18} aria-hidden="true" /> Email me
               </a>
               <a className="contact-link" href={contact.linkedin} target="_blank" rel="noreferrer">
                 <ContactRound size={18} aria-hidden="true" /> LinkedIn <ExternalLink size={14} aria-hidden="true" />
@@ -419,7 +401,7 @@ function App() {
       <footer>
         <div className="footer-mark"><Orbit aria-hidden="true" /> VS / 2026</div>
         <p>Designed and engineered in Mayagüez, Puerto Rico.</p>
-        <div className="footer-status"><span /> Signal active</div>
+        <div className="footer-status"><span /> Open to internships</div>
       </footer>
 
       <ProjectDialog project={selectedProject} onClose={closeProject} />
