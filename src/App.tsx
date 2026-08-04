@@ -250,7 +250,7 @@ function App() {
               </div>
               <div>
                 <span>Status</span>
-                <strong>Open to internships</strong>
+                <strong>Open to internships &amp; co-ops</strong>
               </div>
               <div>
                 <span>Graduation</span>
@@ -401,7 +401,7 @@ function App() {
       <footer>
         <div className="footer-mark"><Orbit aria-hidden="true" /> VS / 2026</div>
         <p>Designed and engineered in Mayagüez, Puerto Rico.</p>
-        <div className="footer-status"><span /> Open to internships</div>
+        <div className="footer-status"><span /> Open to internships &amp; co-ops</div>
       </footer>
 
       <ProjectDialog project={selectedProject} onClose={closeProject} />
