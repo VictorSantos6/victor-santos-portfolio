@@ -7,6 +7,7 @@ const LOGIN_WINDOW_SECONDS = 15 * 60
 const LOGIN_LOCK_SECONDS = 30 * 60
 const LOGIN_MAX_FAILURES = 5
 const MAX_RESUME_BYTES = 10 * 1024 * 1024
+const PBKDF2_ITERATIONS = 100000
 const encoder = new TextEncoder()
 
 function json(data, status = 200, extraHeaders = {}) {
@@ -52,7 +53,7 @@ async function verifyPassword(password, env) {
     name: 'PBKDF2',
     hash: 'SHA-256',
     salt: fromBase64(env.ADMIN_PASSWORD_SALT),
-    iterations: 210000,
+    iterations: PBKDF2_ITERATIONS,
   }, key, 256))
   return constantTimeEqual(derived, fromBase64(env.ADMIN_PASSWORD_HASH))
 }

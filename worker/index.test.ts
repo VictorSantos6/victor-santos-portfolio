@@ -7,7 +7,7 @@ function authEnvironment(password = 'a-long-test-password') {
   const salt = randomBytes(24)
   return {
     ADMIN_PASSWORD_SALT: salt.toString('base64'),
-    ADMIN_PASSWORD_HASH: pbkdf2Sync(password, salt, 210000, 32, 'sha256').toString('base64'),
+    ADMIN_PASSWORD_HASH: pbkdf2Sync(password, salt, 100000, 32, 'sha256').toString('base64'),
     ADMIN_SESSION_SECRET: randomBytes(32).toString('base64'),
   }
 }

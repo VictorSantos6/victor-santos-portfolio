@@ -11,7 +11,7 @@ if (password.length < 12) {
 }
 
 const salt = randomBytes(24)
-const hash = pbkdf2Sync(password, salt, 210000, 32, 'sha256')
+const hash = pbkdf2Sync(password, salt, 100000, 32, 'sha256')
 
 stdout.write(`ADMIN_PASSWORD_SALT=${salt.toString('base64')}\n`)
 stdout.write(`ADMIN_PASSWORD_HASH=${hash.toString('base64')}\n`)
