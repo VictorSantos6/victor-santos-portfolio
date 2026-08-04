@@ -1,0 +1,135 @@
+{
+  "identity": {
+    "name": "Victor Santos",
+    "role": "CS & Engineering student",
+    "kicker": "CS & Engineering student · UPRM",
+    "headlineLead": "I build software",
+    "headlineMiddle": "and learn by",
+    "headlineEmphasis": "shipping it.",
+    "summary": "I’m Victor Santos, a Computer Science and Engineering student at UPRM. I build mobile apps with Flutter and Firebase, web projects, and research tools—often using AI-assisted coding to learn and iterate.",
+    "building": "Mobile, web, and research tools",
+    "status": "Open to internships & co-ops",
+    "location": "Mayagüez, Puerto Rico"
+  },
+  "education": {
+    "institution": "University of Puerto Rico Mayagüez",
+    "location": "Mayagüez, PR",
+    "degree": "B.S. Computer Science and Engineering",
+    "graduation": "May 2028",
+    "gpa": "3.31",
+    "coursework": [
+      "Data Structures",
+      "Advanced Programming",
+      "Fundamentals of Computing",
+      "Introduction to Software Engineering",
+      "Analysis and Design of Algorithms"
+    ]
+  },
+  "skillGroups": [
+    { "label": "Languages", "skills": ["Dart", "Java", "C++", "Python", "JavaScript"] },
+    { "label": "Frameworks", "skills": ["Flutter", "React", "Firebase", "Figma"] },
+    { "label": "Tools", "skills": ["Docker", "Git", "GitHub", "AI-assisted coding"] },
+    { "label": "Practices", "skills": ["Clean Architecture", "Teamwork", "Testing"] }
+  ],
+  "experienceIntro": "My experience so far includes autonomous-systems research, Flutter development, and hands-on robotics.",
+  "experiences": [
+    {
+      "id": "lidron",
+      "organization": "LiDRON Research",
+      "role": "Developer",
+      "location": "Mayagüez, PR",
+      "period": "May 2026 — Present",
+      "eyebrow": "Autonomous systems research",
+      "summary": "I’m helping build software for a Lockheed Martin-sponsored research project on autonomous drone landing.",
+      "highlights": [
+        "Set up a macOS ARM64 and Ubuntu/Docker workflow with shared source volumes so the same code runs in both environments.",
+        "Cut the build-and-test cycle by 50% while keeping the development environments in sync.",
+        "Built a real-time Python pipeline that filters raw LiDAR point-cloud data for landing detection."
+      ],
+      "featured": true,
+      "impact": [
+        { "value": "50%", "label": "faster iteration" },
+        { "value": "100%", "label": "environment parity" }
+      ]
+    },
+    {
+      "id": "miuni",
+      "organization": "MiUni",
+      "role": "Developer",
+      "location": "Mayagüez, PR",
+      "period": "Jul 2025 — Present",
+      "eyebrow": "Flutter mobile development",
+      "summary": "I work on Flutter features for MiUni, using Clean Architecture and Cubit to keep the app organized as it grows.",
+      "highlights": [
+        "Developed the app tutorial onboarding flow that guides users through key features after their first login.",
+        "Built a Pickleball tournament module for team management and live score tracking using Flutter, Dart, and Cubit."
+      ]
+    },
+    {
+      "id": "skillsusa",
+      "organization": "SkillsUSA",
+      "role": "Technician and Programmer",
+      "location": "Georgia, US",
+      "period": "May 2023 — Jul 2023",
+      "eyebrow": "Robotics competition",
+      "summary": "I helped prepare and maintain a Scorbot robotic arm for a SkillsUSA competition.",
+      "highlights": [
+        "Assembled and maintained Scorbot robotic-arm wiring components on the circuit board for reliable connectivity and function."
+      ]
+    }
+  ],
+  "projectsIntro": "Open a project to see what I built, the tools I used, and the problem I was trying to solve.",
+  "projects": [
+    {
+      "id": "flash-cards",
+      "name": "Flash Cards App",
+      "period": "Jul 2025 — Aug 2025",
+      "stack": ["Flutter", "Dart", "BLoC/Cubit", "Hive"],
+      "signal": "01 / MOBILE APP",
+      "problem": "I wanted a simple study app that could create and review flashcards without requiring an internet connection.",
+      "contribution": "I built the Flutter app from scratch, organized it with Clean Architecture and Cubit, and stored decks locally with Hive.",
+      "outcomes": ["Deck creation and flashcard editing", "Dark and light appearance modes", "Offline persistence with Hive"],
+      "accent": "cyan"
+    },
+    {
+      "id": "esports-organizer",
+      "name": "Esports Organizer",
+      "period": "Jul 2025 — Present",
+      "stack": ["React", "JavaScript", "HTML", "Figma"],
+      "signal": "02 / WEB APP",
+      "problem": "The organizer needed a clearer way for players and viewers to follow brackets and look up team information.",
+      "contribution": "I built the tournament brackets page in React and designed responsive team profile screens in Figma.",
+      "outcomes": ["Interactive bracket progression", "Team statistics and match-history prototype", "Structured GitHub commits and branches"],
+      "accent": "blue"
+    },
+    {
+      "id": "vehicle-reservation",
+      "name": "Vehicle Reservation System",
+      "period": "Apr 2025 — May 2025",
+      "stack": ["Java", "OOP", "Data Structures"],
+      "signal": "03 / JAVA COURSE PROJECT",
+      "problem": "For a UPRM course project, I needed to model vehicle reservations, time conflicts, user roles, and station operations.",
+      "contribution": "I built a terminal-based Java system with separate client and owner flows, modular packages, and object-oriented data models.",
+      "outcomes": ["Conflict validation and waitlist management", "Undo and redo actions", "Real-time terminal reservations"],
+      "accent": "amber"
+    },
+    {
+      "id": "space-invaders",
+      "name": "Space Invaders",
+      "period": "Apr 2024",
+      "stack": ["C++", "Game Logic"],
+      "signal": "04 / C++ GAME",
+      "problem": "This class project started with a C++ Space Invaders game that had bugs in collision detection and input handling.",
+      "contribution": "I traced and fixed the game logic, then improved player input and collision behavior without external libraries.",
+      "outcomes": ["Refined collision detection", "Improved user input and game mechanics", "Simplified game-loop logic"],
+      "accent": "violet"
+    }
+  ],
+  "contact": {
+    "email": "victor.santos6@upr.edu",
+    "linkedin": "https://linkedin.com/in/victor-santos-figueroa",
+    "intro": "I’m looking for software engineering internships where I can contribute to real projects, learn from a team, and keep improving as a developer.",
+    "resumeKey": null,
+    "resumeName": "Victor-Santos-Resume.pdf"
+  }
+}

@@ -17,6 +17,10 @@ export interface Experience {
   summary: string
   highlights: string[]
   featured?: boolean
+  impact?: Array<{
+    value: string
+    label: string
+  }>
 }
 
 export interface Project {
@@ -39,5 +43,38 @@ export interface SkillGroup {
 export interface Contact {
   email: string
   linkedin: string
-  resume: string
+  intro: string
+  resumeKey: string | null
+  resumeName: string
+}
+
+export interface Identity {
+  name: string
+  role: string
+  kicker: string
+  headlineLead: string
+  headlineMiddle: string
+  headlineEmphasis: string
+  summary: string
+  building: string
+  status: string
+  location: string
+}
+
+export interface PortfolioContent {
+  identity: Identity
+  education: Education
+  skillGroups: SkillGroup[]
+  experienceIntro: string
+  experiences: Experience[]
+  projectsIntro: string
+  projects: Project[]
+  contact: Contact
+}
+
+export interface PortfolioRevision {
+  id: number
+  content: PortfolioContent
+  updatedAt: string
+  publishedAt: string | null
 }

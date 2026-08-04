@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "admin:secrets": "node scripts/generate-admin-secrets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

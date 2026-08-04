@@ -13,12 +13,12 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './App.css'
 import { ProjectDialog } from './components/ProjectDialog'
-import { contact, education, experiences, projects, skillGroups } from './data/portfolio'
+import { defaultPortfolio } from './data/portfolio'
 import { useReducedMotion } from './hooks/useReducedMotion'
 import { useWebGL } from './hooks/useWebGL'
 import { sectionThemes, themeCssVariables } from './theme'
 import type { SectionId, ThemeCSSProperties } from './theme'
-import type { Project } from './types'
+import type { PortfolioContent, Project } from './types'
 
 const SpaceScene = lazy(() => import('./components/SpaceScene'))
 
@@ -30,22 +30,47 @@ const navigationItems = [
   { id: 'contact', label: 'Contact' },
 ] as const
 
-function projectFromHash(): Project | null {
+function projectFromHash(projects: Project[]): Project | null {
   const id = window.location.hash.replace('#project-', '')
   return projects.find((project) => project.id === id) ?? null
 }
 
-function App() {
+interface AppProps {
+  initialContent?: PortfolioContent
+  loadPublished?: boolean
+  preview?: boolean
+  onExitPreview?: () => void
+}
+
+function App({
+  initialContent = defaultPortfolio,
+  loadPublished = true,
+  preview = false,
+  onExitPreview,
+}: AppProps) {
   const reducedMotion = useReducedMotion()
   const webGLSupported = useWebGL()
+  const [portfolio, setPortfolio] = useState(initialContent)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [activeSection, setActiveSection] = useState<SectionId>('top')
-  const [selectedProject, setSelectedProject] = useState<Project | null>(() => projectFromHash())
+  const [selectedProject, setSelectedProject] = useState<Project | null>(() => projectFromHash(initialContent.projects))
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches)
   const appShell = useRef<HTMLDivElement>(null)
   const previousSection = useRef<SectionId>('top')
   const lastTrigger = useRef<HTMLButtonElement | null>(null)
+  const lastBrandActivation = useRef(0)
   const activeTheme = sectionThemes[activeSection]
+  const { contact, education, experiences, projects, skillGroups } = portfolio
+
+  useEffect(() => {
+    if (!loadPublished || typeof fetch !== 'function') return
+    const controller = new AbortController()
+    fetch('/api/portfolio', { signal: controller.signal, cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Portfolio unavailable')))
+      .then((content: PortfolioContent) => setPortfolio(content))
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [loadPublished])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 720px)')
@@ -55,10 +80,19 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const syncHash = () => setSelectedProject(projectFromHash())
+    const syncHash = () => setSelectedProject(projectFromHash(projects))
     window.addEventListener('hashchange', syncHash)
     return () => window.removeEventListener('hashchange', syncHash)
-  }, [])
+  }, [projects])
+
+  useEffect(() => {
+    setSelectedProject((current) => {
+      const hashProject = projectFromHash(projects)
+      if (hashProject) return hashProject
+      if (!current) return null
+      return projects.find((project) => project.id === current.id) ?? null
+    })
+  }, [projects])
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
@@ -146,6 +180,18 @@ function App() {
     window.setTimeout(() => lastTrigger.current?.focus(), 0)
   }, [])
 
+  const handleBrandActivation = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const now = Date.now()
+    if (now - lastBrandActivation.current <= 500) {
+      event.preventDefault()
+      lastBrandActivation.current = 0
+      window.history.pushState(null, '', '/admin')
+      window.dispatchEvent(new Event('portfolio:navigate'))
+      return
+    }
+    lastBrandActivation.current = now
+  }
+
   const progressStyle: ThemeCSSProperties = {
     ...themeCssVariables(sectionThemes.top),
     '--scroll-progress': `${scrollProgress * 100}%`,
@@ -162,6 +208,13 @@ function App() {
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
+
+      {preview && (
+        <div className="preview-bar" role="status">
+          <span>Draft preview</span>
+          <button type="button" onClick={onExitPreview}>Back to editor</button>
+        </div>
+      )}
 
       <div className="space-backdrop" aria-hidden="true">
         {webGLSupported ? (
@@ -183,11 +236,11 @@ function App() {
       <div className="noise-layer" aria-hidden="true" />
 
       <header className={`site-header site-header--${activeSection === 'top' ? 'hero' : 'interior'}`}>
-        <a className="brand" href="#top" aria-label="Victor Santos, back to top">
+        <a className="brand" href="#top" aria-label={`${portfolio.identity.name}, back to top`} onClick={handleBrandActivation}>
           <span className="brand-mark">VS</span>
           <span className="brand-copy">
-            <strong>Victor Santos</strong>
-            <small>CS &amp; Engineering student</small>
+            <strong>{portfolio.identity.name}</strong>
+            <small>{portfolio.identity.role}</small>
           </span>
         </a>
         <nav aria-label="Primary navigation">
@@ -220,24 +273,24 @@ function App() {
           <div className="hero-grid">
             <div className="hero-kicker reveal">
               <span className="live-dot" />
-              CS &amp; Engineering student · UPRM
+              {portfolio.identity.kicker}
             </div>
 
             <div className="hero-copy reveal">
               <p className="chapter-index">00 — Introduction</p>
               <h1 id="hero-title">
-                I build software
-                <span>and learn by</span>
-                <em>shipping it.</em>
+                {portfolio.identity.headlineLead}
+                <span>{portfolio.identity.headlineMiddle}</span>
+                <em>{portfolio.identity.headlineEmphasis}</em>
               </h1>
               <p className="hero-summary">
-                I’m Victor Santos, a Computer Science and Engineering student at UPRM. I build mobile apps with Flutter and Firebase, web projects, and research tools—often using AI-assisted coding to learn and iterate.
+                {portfolio.identity.summary}
               </p>
               <div className="hero-actions">
                 <a className="primary-button" href="#projects">
                   View my projects <ArrowRight size={18} aria-hidden="true" />
                 </a>
-                <a className="text-link" href={contact.resume} download>
+                <a className="text-link" href="/resume" download={contact.resumeName}>
                   <Download size={17} aria-hidden="true" /> Download résumé
                 </a>
               </div>
@@ -246,11 +299,11 @@ function App() {
             <div className="hero-telemetry reveal" aria-label="Current details">
               <div>
                 <span>Building</span>
-                <strong>Mobile, web, and research tools</strong>
+                <strong>{portfolio.identity.building}</strong>
               </div>
               <div>
                 <span>Status</span>
-                <strong>Open to internships &amp; co-ops</strong>
+                <strong>{portfolio.identity.status}</strong>
               </div>
               <div>
                 <span>Graduation</span>
@@ -316,7 +369,7 @@ function App() {
           <div className="section-heading align-right reveal">
             <p className="chapter-index">02 — Experience</p>
             <h2 id="experience-title">Work I’ve done<br />so far.</h2>
-            <p className="section-deck">My experience so far includes autonomous-systems research, Flutter development, and hands-on robotics.</p>
+            <p className="section-deck">{portfolio.experienceIntro}</p>
           </div>
 
           <div className="mission-stack">
@@ -335,10 +388,11 @@ function App() {
                     {experience.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}
                   </ul>
                 </div>
-                {experience.featured && (
+                {experience.featured && experience.impact?.length && (
                   <div className="impact-orbit" aria-label="LiDRON engineering impact">
-                    <div><strong>50%</strong><span>faster iteration</span></div>
-                    <div><strong>100%</strong><span>environment parity</span></div>
+                    {experience.impact.map((impact) => (
+                      <div key={`${impact.value}-${impact.label}`}><strong>{impact.value}</strong><span>{impact.label}</span></div>
+                    ))}
                   </div>
                 )}
               </article>
@@ -350,7 +404,7 @@ function App() {
           <div className="section-heading reveal">
             <p className="chapter-index">03 — Selected projects</p>
             <h2 id="projects-title">Things I’ve built<br />while learning.</h2>
-            <p className="section-deck">Open a project to see what I built, the tools I used, and the problem I was trying to solve.</p>
+            <p className="section-deck">{portfolio.projectsIntro}</p>
           </div>
 
           <div className="project-constellation">
@@ -384,7 +438,7 @@ function App() {
           <div className="contact-copy reveal">
             <p className="chapter-index">04 — Get in touch</p>
             <h2 id="contact-title">Want to work<br />together?</h2>
-            <p>I’m looking for software engineering internships where I can contribute to real projects, learn from a team, and keep improving as a developer.</p>
+            <p>{contact.intro}</p>
             <div className="contact-actions">
               <a className="primary-button" href={`mailto:${contact.email}`}>
                 <Mail size={18} aria-hidden="true" /> Email me
@@ -400,8 +454,8 @@ function App() {
 
       <footer>
         <div className="footer-mark"><Orbit aria-hidden="true" /> VS / 2026</div>
-        <p>Designed and engineered in Mayagüez, Puerto Rico.</p>
-        <div className="footer-status"><span /> Open to internships &amp; co-ops</div>
+        <p>Designed and engineered in {portfolio.identity.location}.</p>
+        <div className="footer-status"><span /> {portfolio.identity.status}</div>
       </footer>
 
       <ProjectDialog project={selectedProject} onClose={closeProject} />

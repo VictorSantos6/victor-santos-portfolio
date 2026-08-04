@@ -42,7 +42,7 @@ describe('portfolio experience', () => {
     )
     expect(screen.getByRole('link', { name: /download résumé/i })).toHaveAttribute(
       'href',
-      '/Victor-Santos-Resume.pdf',
+      '/resume',
     )
     expect(screen.getByRole('banner')).toHaveClass('site-header--hero')
     expect(screen.getByRole('link', { name: 'Intro' })).toHaveAttribute('aria-current', 'location')
