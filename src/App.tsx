@@ -51,14 +51,14 @@ function App({
   const reducedMotion = useReducedMotion()
   const webGLSupported = useWebGL()
   const [portfolio, setPortfolio] = useState(initialContent)
-  const [scrollProgress, setScrollProgress] = useState(0)
+  const scrollProgress = useRef(0)
   const [activeSection, setActiveSection] = useState<SectionId>('top')
   const [selectedProject, setSelectedProject] = useState<Project | null>(() => projectFromHash(initialContent.projects))
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches)
   const appShell = useRef<HTMLDivElement>(null)
   const previousSection = useRef<SectionId>('top')
   const navigationTarget = useRef<SectionId | null>(null)
-  const navigationReleaseTimer = useRef<number | null>(null)
+  const scrollTween = useRef<gsap.core.Tween | null>(null)
   const lastTrigger = useRef<HTMLButtonElement | null>(null)
   const lastBrandActivation = useRef(0)
   const activeTheme = sectionThemes[activeSection]
@@ -98,11 +98,9 @@ function App({
 
   useEffect(() => {
     const releaseNavigationTarget = () => {
+      scrollTween.current?.kill()
+      scrollTween.current = null
       navigationTarget.current = null
-      if (navigationReleaseTimer.current !== null) {
-        window.clearTimeout(navigationReleaseTimer.current)
-        navigationReleaseTimer.current = null
-      }
     }
     const releaseOnKey = (event: KeyboardEvent) => {
       if (['ArrowDown', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp', ' '].includes(event.key)) {
@@ -110,14 +108,12 @@ function App({
       }
     }
 
-    window.addEventListener('scrollend', releaseNavigationTarget)
     window.addEventListener('wheel', releaseNavigationTarget, { passive: true })
     window.addEventListener('touchstart', releaseNavigationTarget, { passive: true })
     window.addEventListener('keydown', releaseOnKey)
 
     return () => {
       releaseNavigationTarget()
-      window.removeEventListener('scrollend', releaseNavigationTarget)
       window.removeEventListener('wheel', releaseNavigationTarget)
       window.removeEventListener('touchstart', releaseNavigationTarget)
       window.removeEventListener('keydown', releaseOnKey)
@@ -131,11 +127,11 @@ function App({
         gsap.utils.toArray<HTMLElement>('.reveal').forEach((element) => {
           gsap.fromTo(
             element,
-            { opacity: 0, y: 24 },
+            { opacity: 0, y: 16 },
             {
               opacity: 1,
               y: 0,
-              duration: 0.38,
+              duration: 0.28,
               ease: 'power2.out',
               scrollTrigger: {
                 trigger: element,
@@ -152,8 +148,11 @@ function App({
         trigger: '#main-content',
         start: 'top top',
         end: 'bottom bottom',
-        scrub: reducedMotion ? false : 0.4,
-        onUpdate: (self) => setScrollProgress(self.progress),
+        scrub: false,
+        onUpdate: (self) => {
+          scrollProgress.current = self.progress
+          appShell.current?.style.setProperty('--scroll-progress', `${self.progress * 100}%`)
+        },
       })
 
       navigationItems.forEach(({ id }) => {
@@ -185,7 +184,7 @@ function App({
     } else {
       gsap.to(shell, {
         ...variables,
-        duration: sectionChanged ? 0.38 : 0,
+        duration: sectionChanged ? 0.28 : 0,
         ease: 'power2.out',
         overwrite: true,
       })
@@ -209,21 +208,44 @@ function App({
     if (!destination) return
 
     event.preventDefault()
+    scrollTween.current?.kill()
     navigationTarget.current = section
     setActiveSection(section)
     window.history.pushState(null, '', `#${section}`)
-    destination.scrollIntoView?.({
-      behavior: reducedMotion ? 'auto' : 'smooth',
-      block: 'start',
-    })
 
-    if (navigationReleaseTimer.current !== null) {
-      window.clearTimeout(navigationReleaseTimer.current)
-    }
-    navigationReleaseTimer.current = window.setTimeout(() => {
+    const startY = window.scrollY
+    const scrollMargin = Number.parseFloat(window.getComputedStyle(destination).scrollMarginTop) || 0
+    const targetY = Math.max(0, startY + destination.getBoundingClientRect().top - scrollMargin)
+
+    if (reducedMotion) {
+      window.scrollTo({ top: targetY, behavior: 'auto' })
       navigationTarget.current = null
-      navigationReleaseTimer.current = null
-    }, reducedMotion ? 0 : 1400)
+      return
+    }
+
+    const position = { y: startY }
+    const viewportDistance = Math.abs(targetY - startY) / Math.max(window.innerHeight, 1)
+    const duration = gsap.utils.clamp(0.34, 0.52, 0.32 + viewportDistance * 0.035)
+    let tween: gsap.core.Tween
+
+    tween = gsap.to(position, {
+      y: targetY,
+      duration,
+      ease: 'power3.inOut',
+      overwrite: true,
+      onUpdate: () => window.scrollTo(0, position.y),
+      onComplete: () => {
+        if (scrollTween.current !== tween) return
+        scrollTween.current = null
+        navigationTarget.current = null
+      },
+      onInterrupt: () => {
+        if (scrollTween.current !== tween) return
+        scrollTween.current = null
+        navigationTarget.current = null
+      },
+    })
+    scrollTween.current = tween
   }, [reducedMotion])
 
   const openProject = (project: Project, trigger: HTMLButtonElement) => {
@@ -253,7 +275,7 @@ function App({
 
   const progressStyle: ThemeCSSProperties = {
     ...themeCssVariables(sectionThemes.top),
-    '--scroll-progress': `${scrollProgress * 100}%`,
+    '--scroll-progress': '0%',
   }
 
   return (
@@ -518,7 +540,7 @@ function App({
         <div className="footer-status"><span /> {portfolio.identity.status}</div>
       </footer>
 
-      <ProjectDialog project={selectedProject} onClose={closeProject} />
+      <ProjectDialog project={selectedProject} onClose={closeProject} reducedMotion={reducedMotion} />
     </div>
   )
 }

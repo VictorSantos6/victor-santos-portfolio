@@ -7,7 +7,7 @@ import { sectionOrder, sectionThemes } from '../theme'
 import type { PlanetTheme, SectionId, SectionTheme } from '../theme'
 
 interface SpaceSceneProps {
-  progress: number
+  progress: { current: number }
   activeProjectId: string | null
   activeSection: SectionId
   theme: SectionTheme
@@ -53,7 +53,7 @@ function StarField({ count, color, reducedMotion }: { count: number; color: stri
 
   useLayoutEffect(() => {
     if (!material.current) return
-    const tween = tweenColor(material.current.color, color, reducedMotion ? 0 : 1.2)
+    const tween = tweenColor(material.current.color, color, reducedMotion ? 0 : 0.28)
     return () => {
       tween.kill()
     }
@@ -115,7 +115,15 @@ function LidarCloud({ color }: { color: string }) {
   )
 }
 
-function ProjectBeacons({ activeProjectId, theme }: { activeProjectId: string | null; theme: SectionTheme }) {
+function ProjectBeacons({
+  activeProjectId,
+  theme,
+  reducedMotion,
+}: {
+  activeProjectId: string | null
+  theme: SectionTheme
+  reducedMotion: boolean
+}) {
   const group = useRef<THREE.Group>(null)
   const selectedColor = activeProjectId
     ? {
@@ -127,7 +135,7 @@ function ProjectBeacons({ activeProjectId, theme }: { activeProjectId: string | 
     : theme.primary
 
   useFrame((_, delta) => {
-    if (group.current) group.current.rotation.y += delta * 0.08
+    if (!reducedMotion && group.current) group.current.rotation.y += delta * 0.08
   })
 
   return (
@@ -246,8 +254,8 @@ function continentField(u: number, v: number) {
 }
 
 function createIllustratedEarthTexture(planet: PlanetTheme) {
-  const width = 768
-  const height = 384
+  const width = 512
+  const height = 256
   const colorData = new Uint8Array(width * height * 4)
   const oceanDeep = new THREE.Color(planet.surface).multiplyScalar(0.52)
   const atmosphereColor = new THREE.Color(planet.atmosphere)
@@ -340,8 +348,8 @@ function illustratedDistance(u: number, v: number, centerX: number, centerY: num
 }
 
 function createIllustratedMarsTexture(planet: PlanetTheme) {
-  const width = 768
-  const height = 384
+  const width = 512
+  const height = 256
   const data = new Uint8Array(width * height * 4)
   const deep = new THREE.Color(planet.detail).multiplyScalar(0.62)
   const shadow = new THREE.Color(planet.detail).lerp(new THREE.Color(planet.surface), 0.4)
@@ -392,8 +400,8 @@ function createIllustratedMarsTexture(planet: PlanetTheme) {
 }
 
 function createIllustratedNeptuneTexture(planet: PlanetTheme) {
-  const width = 768
-  const height = 384
+  const width = 512
+  const height = 256
   const data = new Uint8Array(width * height * 4)
   const palette = [
     new THREE.Color(planet.ring).lerp(new THREE.Color(planet.surface), 0.25),
@@ -439,8 +447,8 @@ function createIllustratedNeptuneTexture(planet: PlanetTheme) {
 }
 
 function createIllustratedMoonTexture(planet: PlanetTheme) {
-  const width = 768
-  const height = 384
+  const width = 512
+  const height = 256
   const data = new Uint8Array(width * height * 4)
   const light = new THREE.Color(planet.highlight)
   const base = new THREE.Color(planet.atmosphere).lerp(light, 0.56)
@@ -486,14 +494,23 @@ function createIllustratedPlanetTexture(planet: PlanetTheme) {
   return createIllustratedMoonTexture(planet)
 }
 
-function IllustratedPlanetSurface({ planet }: { planet: PlanetTheme }) {
-  const texture = useMemo(() => createIllustratedPlanetTexture(planet), [planet])
+const illustratedTextureCache = new Map<PlanetTheme['variant'], THREE.DataTexture>()
 
-  useEffect(() => () => texture.dispose(), [texture])
+function getIllustratedPlanetTexture(planet: PlanetTheme) {
+  const cached = illustratedTextureCache.get(planet.variant)
+  if (cached) return cached
+
+  const texture = createIllustratedPlanetTexture(planet)
+  illustratedTextureCache.set(planet.variant, texture)
+  return texture
+}
+
+function IllustratedPlanetSurface({ planet }: { planet: PlanetTheme }) {
+  const texture = useMemo(() => getIllustratedPlanetTexture(planet), [planet])
 
   return (
     <mesh>
-      <sphereGeometry args={[1.62, 96, 96]} />
+      <sphereGeometry args={[1.62, 72, 72]} />
       <meshBasicMaterial map={texture} toneMapped={false} />
     </mesh>
   )
@@ -720,20 +737,20 @@ function PlanetTransition({
     if (previous) {
       timeline.to(previous.position, {
         x: outgoingOffset,
-        duration: 0.28,
+        duration: 0.18,
         ease: 'power2.in',
       }, 0)
       timeline.to(previous.scale, {
         x: 0.72,
         y: 0.72,
         z: 0.72,
-        duration: 0.28,
+        duration: 0.18,
         ease: 'power2.in',
       }, 0)
     }
 
-    timeline.to(next.position, { x: 0, duration: 0.4, ease: 'power3.out' }, 0.24)
-    timeline.to(next.scale, { x: 1, y: 1, z: 1, duration: 0.4, ease: 'power3.out' }, 0.24)
+    timeline.to(next.position, { x: 0, duration: 0.3, ease: 'power3.out' }, 0.1)
+    timeline.to(next.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: 'power3.out' }, 0.1)
 
     return () => {
       timeline.kill()
@@ -767,7 +784,7 @@ function SceneEnvironment({ theme, reducedMotion }: Pick<SpaceSceneProps, 'theme
   const fillLight = useRef<THREE.PointLight>(null)
 
   useLayoutEffect(() => {
-    const duration = reducedMotion ? 0 : 0.38
+    const duration = reducedMotion ? 0 : 0.28
     const tweens = [tweenColor(background, theme.background, duration)]
 
     if (fog.current) tweens.push(tweenColor(fog.current.color, theme.fog, duration))
@@ -804,7 +821,7 @@ function SceneRig({
   const cameraTarget = useRef(new THREE.Vector3(...theme.planet.cameraTarget))
 
   useLayoutEffect(() => {
-    const duration = reducedMotion ? 0 : 0.42
+    const duration = reducedMotion ? 0 : 0.3
     const cameraTween = gsap.to(cameraPosition.current, {
       x: theme.planet.camera[0],
       y: theme.planet.camera[1],
@@ -829,7 +846,7 @@ function SceneRig({
   }, [reducedMotion, theme])
 
   useFrame(({ camera, pointer }, delta) => {
-    const motionProgress = reducedMotion ? 0 : progress
+    const motionProgress = reducedMotion ? 0 : progress.current
     const pointerX = mobile || reducedMotion ? 0 : pointer.x * 0.14
     const pointerY = mobile || reducedMotion ? 0 : pointer.y * 0.09
     const targetX = cameraPosition.current.x + Math.sin(motionProgress * Math.PI * 1.8) * 0.32 + pointerX
@@ -849,7 +866,7 @@ function SceneRig({
     if (world.current) {
       world.current.rotation.z = THREE.MathUtils.lerp(
         world.current.rotation.z,
-        reducedMotion ? 0 : progress * -0.08,
+        reducedMotion ? 0 : progress.current * -0.08,
         smoothing,
       )
     }
@@ -860,17 +877,48 @@ function SceneRig({
       <StarField count={mobile ? 650 : 1250} color={theme.particle} reducedMotion={reducedMotion} />
       <PlanetTransition activeSection={activeSection} theme={theme} reducedMotion={reducedMotion} />
       <LidarCloud color={theme.primary} />
-      <ProjectBeacons activeProjectId={activeProjectId} theme={theme} />
+      <ProjectBeacons activeProjectId={activeProjectId} theme={theme} reducedMotion={reducedMotion} />
     </group>
   )
 }
 
 function SpaceScene(props: SpaceSceneProps) {
+  useEffect(() => {
+    const planets = sectionOrder
+      .map((section) => sectionThemes[section].planet)
+      .filter((planet) => planet.variant !== 'exoplanet')
+    let index = 0
+    let idleHandle: number | null = null
+    let timeoutHandle: number | null = null
+
+    const warmNextTexture = () => {
+      getIllustratedPlanetTexture(planets[index])
+      index += 1
+      if (index < planets.length) scheduleNextTexture()
+    }
+
+    const scheduleNextTexture = () => {
+      if ('requestIdleCallback' in window) {
+        idleHandle = window.requestIdleCallback(warmNextTexture, { timeout: 1200 })
+      } else {
+        timeoutHandle = globalThis.setTimeout(warmNextTexture, 420)
+      }
+    }
+
+    scheduleNextTexture()
+
+    return () => {
+      if (idleHandle !== null && 'cancelIdleCallback' in window) window.cancelIdleCallback(idleHandle)
+      if (timeoutHandle !== null) window.clearTimeout(timeoutHandle)
+    }
+  }, [])
+
   return (
     <Canvas
       aria-hidden="true"
       camera={{ position: [...props.theme.planet.camera], fov: props.mobile ? 58 : 48, near: 0.1, far: 80 }}
-      dpr={props.mobile ? [1, 1.2] : [1, 1.65]}
+      dpr={props.mobile ? 1 : [1, 1.4]}
+      frameloop={props.reducedMotion ? 'demand' : 'always'}
       gl={{ alpha: true, antialias: !props.mobile, powerPreference: 'high-performance' }}
     >
       <SceneEnvironment theme={props.theme} reducedMotion={props.reducedMotion} />

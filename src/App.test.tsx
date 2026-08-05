@@ -6,6 +6,7 @@ import { sectionThemes, themeCssVariables } from './theme'
 
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
   window.history.replaceState(null, '', '/')
 })
 
@@ -90,11 +91,7 @@ describe('portfolio experience', () => {
   })
 
   it('targets a selected chapter immediately without waiting for intermediate scroll triggers', async () => {
-    const scrollIntoView = vi.fn()
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    })
+    const scrollTo = vi.spyOn(window, 'scrollTo')
     const user = userEvent.setup()
     render(<App />)
 
@@ -104,7 +101,28 @@ describe('portfolio experience', () => {
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-section', 'contact')
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-planet', 'moon')
     expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('aria-current', 'location')
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+    await waitFor(() => expect(scrollTo).toHaveBeenCalled())
+  })
+
+  it('jumps without animation when reduced motion is requested', async () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }))
+    const scrollTo = vi.spyOn(window, 'scrollTo')
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('link', { name: 'Contact' }))
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'auto' })
+    expect(document.querySelector('.app-shell')).toHaveAttribute('data-section', 'contact')
   })
 
   it('opens the matching project when loaded from a project hash', () => {
