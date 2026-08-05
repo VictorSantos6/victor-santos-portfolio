@@ -115,16 +115,16 @@ function LidarCloud({ color }: { color: string }) {
   )
 }
 
-const beaconColors: Record<string, string> = {
-  'flash-cards': '#4a90e2',
-  'esports-organizer': '#e0f4ff',
-  'vehicle-reservation': '#ff6b35',
-  'space-invaders': '#4a90e2',
-}
-
 function ProjectBeacons({ activeProjectId, theme }: { activeProjectId: string | null; theme: SectionTheme }) {
   const group = useRef<THREE.Group>(null)
-  const selectedColor = activeProjectId ? beaconColors[activeProjectId] : theme.primary
+  const selectedColor = activeProjectId
+    ? ({
+        'flash-cards': theme.primary,
+        'esports-organizer': theme.glow,
+        'vehicle-reservation': theme.secondary,
+        'space-invaders': theme.planet.detail,
+      }[activeProjectId] ?? theme.primary)
+    : theme.primary
 
   useFrame((_, delta) => {
     if (group.current) group.current.rotation.y += delta * 0.08
@@ -175,7 +175,7 @@ function PlanetDetails({ planet }: { planet: PlanetTheme }) {
         </mesh>
         <mesh position={[-0.82, -0.28, 1.3]} scale={[0.52, 0.86, 0.16]} rotation={[0, -0.38, 0.28]}>
           <sphereGeometry args={[0.58, 16, 12]} />
-          <meshStandardMaterial color="#67c77b" roughness={0.95} />
+          <meshStandardMaterial color={planet.highlight} roughness={0.95} />
         </mesh>
         <mesh rotation={[Math.PI / 2.25, 0.2, 0.24]}>
           <torusGeometry args={[1.61, 0.018, 8, 96]} />
@@ -199,7 +199,7 @@ function PlanetDetails({ planet }: { planet: PlanetTheme }) {
         ].map(([x, y, z, size], index) => (
           <mesh position={[x, y, z]} key={index} rotation={[0, 0, index * 0.7]}>
             <torusGeometry args={[size, 0.035, 8, 28]} />
-            <meshStandardMaterial color="#672819" roughness={1} />
+            <meshStandardMaterial color={planet.detail} roughness={1} />
           </mesh>
         ))}
         <mesh position={[-0.2, 0.76, 1.5]} scale={[1.3, 0.22, 0.1]}>
@@ -253,7 +253,7 @@ function PlanetDetails({ planet }: { planet: PlanetTheme }) {
         ].map(([x, y, z, size], index) => (
           <mesh position={[x, y, z]} key={index}>
             <torusGeometry args={[size, 0.045, 8, 30]} />
-            <meshStandardMaterial color="#4d5663" roughness={1} />
+            <meshStandardMaterial color={planet.detail} roughness={1} />
           </mesh>
         ))}
       </group>

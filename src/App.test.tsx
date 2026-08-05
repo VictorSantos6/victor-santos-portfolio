@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
-import { sectionThemes, themeCssVariables } from './theme'
+import { planetPalettes, sectionThemes, themeCssVariables } from './theme'
 
 afterEach(() => {
   cleanup()
@@ -21,11 +21,13 @@ describe('portfolio experience', () => {
       contact: 'moon',
     })
 
+    expect(planetPalettes.earth).toEqual(['#a2acb6', '#6d7b48', '#b18b74', '#161340', '#212d61'])
     expect(themeCssVariables(sectionThemes.profile)).toMatchObject({
-      '--cyan': '#38bdf8',
-      '--cta': '#4ade80',
-      '--accent-rgb': '56, 189, 248',
-      '--space-rgb': '6, 26, 36',
+      '--cyan': '#a2acb6',
+      '--cta': '#6d7b48',
+      '--theme-on-primary': '#161340',
+      '--accent-rgb': '162, 172, 182',
+      '--space-rgb': '22, 19, 64',
     })
   })
 
