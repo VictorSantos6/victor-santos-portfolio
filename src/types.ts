@@ -43,6 +43,7 @@ export interface SkillGroup {
 export interface Contact {
   email: string
   linkedin: string
+  github?: string
   intro: string
   resumeKey: string | null
   resumeName: string

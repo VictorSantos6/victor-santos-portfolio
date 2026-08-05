@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { defaultPortfolio } from './data/portfolio'
 import { sectionThemes, themeCssVariables } from './theme'
 
 afterEach(() => {
@@ -68,6 +69,12 @@ describe('portfolio experience', () => {
       'href',
       '/resume',
     )
+    expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute(
+      'href',
+      'https://github.com/VictorSantos6',
+    )
+    expect(screen.queryByText(defaultPortfolio.experienceIntro)).not.toBeInTheDocument()
+    expect(screen.queryByText(defaultPortfolio.projectsIntro)).not.toBeInTheDocument()
     expect(screen.getByRole('banner')).toHaveClass('site-header--hero')
     expect(screen.getByRole('link', { name: 'Intro' })).toHaveAttribute('aria-current', 'location')
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-planet', 'exoplanet')

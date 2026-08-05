@@ -119,12 +119,22 @@ function ProjectBeacons({
   activeProjectId,
   theme,
   reducedMotion,
+  activeSection,
+  mobile,
 }: {
   activeProjectId: string | null
   theme: SectionTheme
   reducedMotion: boolean
+  activeSection: SectionId
+  mobile: boolean
 }) {
   const group = useRef<THREE.Group>(null)
+  const planetIsOnRight = sectionThemes[activeSection].planet.position[0] > 0
+  const beaconPosition: [number, number, number] = [
+    planetIsOnRight ? -3.15 : 3.15,
+    mobile ? -2.75 : -2.45,
+    -1.8,
+  ]
   const selectedColor = activeProjectId
     ? {
         'flash-cards': theme.primary,
@@ -139,7 +149,7 @@ function ProjectBeacons({
   })
 
   return (
-    <group ref={group} position={[2.6, -2.2, -1.8]}>
+    <group ref={group} position={beaconPosition} scale={mobile ? 0.72 : 0.84}>
       <mesh position={[0, 0.8, 0]} rotation={[0.45, 0.2, 0.1]}>
         <octahedronGeometry args={[0.34, 0]} />
         <meshStandardMaterial color={selectedColor} emissive={selectedColor} emissiveIntensity={1.3} wireframe />
@@ -877,7 +887,13 @@ function SceneRig({
       <StarField count={mobile ? 650 : 1250} color={theme.particle} reducedMotion={reducedMotion} />
       <PlanetTransition activeSection={activeSection} theme={theme} reducedMotion={reducedMotion} />
       <LidarCloud color={theme.primary} />
-      <ProjectBeacons activeProjectId={activeProjectId} theme={theme} reducedMotion={reducedMotion} />
+      <ProjectBeacons
+        activeProjectId={activeProjectId}
+        activeSection={activeSection}
+        theme={theme}
+        reducedMotion={reducedMotion}
+        mobile={mobile}
+      />
     </group>
   )
 }

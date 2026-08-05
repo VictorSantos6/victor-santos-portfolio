@@ -105,6 +105,17 @@ export function validatePortfolio(value: unknown): ValidationErrors {
         errors['contact.linkedin'] = 'Use a valid HTTPS URL.'
       }
     }
+    if (contact.github !== undefined) {
+      requireText(errors, 'contact.github', contact.github, 500)
+      if (typeof contact.github === 'string') {
+        try {
+          const url = new URL(contact.github)
+          if (url.protocol !== 'https:' || url.hostname !== 'github.com') throw new Error()
+        } catch {
+          errors['contact.github'] = 'Use a valid GitHub URL.'
+        }
+      }
+    }
     requireText(errors, 'contact.intro', contact.intro, 1000)
     requireText(errors, 'contact.resumeName', contact.resumeName, 180)
     if (contact.resumeKey !== null && typeof contact.resumeKey !== 'string') errors['contact.resumeKey'] = 'Résumé reference is invalid.'

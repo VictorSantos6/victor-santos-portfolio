@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import App from '../App'
+import { defaultPortfolio } from '../data/portfolio'
 import { validatePortfolio, type ValidationErrors } from '../data/validation'
 import type { Experience, PortfolioContent, PortfolioRevision, Project, SkillGroup } from '../types'
 import './AdminApp.css'
@@ -456,7 +457,7 @@ export default function AdminApp() {
         {activeSection === 'contact' && (
           <section className="editor-panel" aria-labelledby="contact-editor-title">
             <div className="panel-heading"><div><h2 id="contact-editor-title">Contact and résumé</h2><p>Public contact details and the PDF attached to the résumé button.</p></div></div>
-            <div className="field-grid two-column"><Field label="Email" type="email" value={draft.contact.email} onChange={(value) => update((content) => { content.contact.email = value })} error={errors['contact.email']} /><Field label="LinkedIn URL" type="url" value={draft.contact.linkedin} onChange={(value) => update((content) => { content.contact.linkedin = value })} error={errors['contact.linkedin']} /></div>
+            <div className="field-grid two-column"><Field label="Email" type="email" value={draft.contact.email} onChange={(value) => update((content) => { content.contact.email = value })} error={errors['contact.email']} /><Field label="LinkedIn URL" type="url" value={draft.contact.linkedin} onChange={(value) => update((content) => { content.contact.linkedin = value })} error={errors['contact.linkedin']} /><Field label="GitHub URL" type="url" value={draft.contact.github ?? defaultPortfolio.contact.github ?? ''} onChange={(value) => update((content) => { content.contact.github = value })} error={errors['contact.github']} /></div>
             <Field label="Contact introduction" value={draft.contact.intro} onChange={(value) => update((content) => { content.contact.intro = value })} error={errors['contact.intro']} multiline />
             <div className="resume-panel"><div><p className="admin-eyebrow">Draft résumé</p><strong>{draft.contact.resumeName}</strong><small>{draft.contact.resumeKey ? 'Stored securely and ready to publish.' : 'Using the résumé bundled with the site.'}</small></div><label className={`secondary-button ${busy ? 'disabled' : ''}`}><FileUp size={17} /> Replace PDF<input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={(event) => uploadResume(event.target.files?.[0])} /></label></div>
           </section>

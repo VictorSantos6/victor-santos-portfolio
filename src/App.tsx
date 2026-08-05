@@ -30,6 +30,14 @@ const navigationItems = [
   { id: 'contact', label: 'Contact' },
 ] as const
 
+function GitHubMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 19 19" aria-hidden="true">
+      <use href="/icons.svg#github-icon" />
+    </svg>
+  )
+}
+
 function projectFromHash(projects: Project[]): Project | null {
   const id = window.location.hash.replace('#project-', '')
   return projects.find((project) => project.id === id) ?? null
@@ -268,6 +276,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = true, preview 
               </div>
             </div>
             <aside className="currently-card reveal" aria-label="Current details">
+              <span className="orbit-signal" aria-hidden="true" />
               <p className="card-label">Currently</p>
               <dl>
                 <div><dt>Working on</dt><dd>{portfolio.identity.building}</dd></div>
@@ -294,7 +303,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = true, preview 
         </section>
 
         <section className="experience-section chapter" id="experience" aria-labelledby="experience-title">
-          <div className="section-heading section-heading--right reveal"><p className="eyebrow">02 · Experience</p><h2 id="experience-title">Work I’ve done so far.</h2><p className="section-deck">{portfolio.experienceIntro}</p></div>
+          <div className="section-heading section-heading--right reveal"><p className="eyebrow">02 · Experience</p><h2 id="experience-title">Work I’ve done so far.</h2></div>
           <div className="experience-list">
             {experiences.map((experience) => (
               <article className={`experience-card reveal ${experience.featured ? 'featured' : ''}`} key={experience.id}>
@@ -311,7 +320,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = true, preview 
         </section>
 
         <section className="projects-section chapter" id="projects" aria-labelledby="projects-title">
-          <div className="section-heading reveal"><p className="eyebrow">03 · Selected projects</p><h2 id="projects-title">Things I’ve built while learning.</h2><p className="section-deck">{portfolio.projectsIntro}</p></div>
+          <div className="section-heading reveal"><p className="eyebrow">03 · Selected projects</p><h2 id="projects-title">Things I’ve built while learning.</h2></div>
           <div className="project-grid">
             {projects.map((project) => (
               <button className={`project-card accent-${project.accent} reveal`} id={`case-${project.id}`} type="button" key={project.id} onClick={(event) => openProject(project, event.currentTarget)} aria-haspopup="dialog">
@@ -328,7 +337,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = true, preview 
         </section>
 
         <section className="contact-section chapter" id="contact" aria-labelledby="contact-title">
-          <div className="contact-card reveal"><p className="eyebrow">04 · Get in touch</p><h2 id="contact-title">Want to work together?</h2><p>{contact.intro}</p><div className="contact-actions"><a className="primary-button" href={`mailto:${contact.email}`}><Mail size={18} aria-hidden="true" /> Email me</a><a className="contact-link" href={contact.linkedin} target="_blank" rel="noreferrer"><ContactRound size={18} aria-hidden="true" /> LinkedIn <ExternalLink size={14} aria-hidden="true" /></a></div><a className="email-display" href={`mailto:${contact.email}`}>{contact.email}</a></div>
+          <div className="contact-card reveal"><p className="eyebrow">04 · Get in touch</p><h2 id="contact-title">Want to work together?</h2><p>{contact.intro}</p><div className="contact-actions"><a className="primary-button" href={`mailto:${contact.email}`}><Mail size={18} aria-hidden="true" /> Email me</a><a className="contact-link" href={contact.linkedin} target="_blank" rel="noreferrer"><ContactRound size={18} aria-hidden="true" /> LinkedIn <ExternalLink size={14} aria-hidden="true" /></a><a className="contact-link" href={contact.github ?? defaultPortfolio.contact.github} target="_blank" rel="noreferrer"><GitHubMark /> GitHub <ExternalLink size={14} aria-hidden="true" /></a></div><a className="email-display" href={`mailto:${contact.email}`}>{contact.email}</a></div>
         </section>
       </main>
 
