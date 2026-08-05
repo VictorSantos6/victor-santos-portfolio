@@ -62,7 +62,11 @@ main, .site-header, footer, .preview-bar, .skip-link { position: relative; z-ind
   transition: border-color 280ms ease, background 280ms ease;
 }
 .brand { display: flex; min-width: 0; align-items: center; gap: 10px; text-decoration: none; }
-.brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(var(--accent-rgb), .5); border-radius: 50%; color: var(--theme-text); font: 600 .78rem var(--font-mono); }
+.brand-mark { position: relative; display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; color: var(--theme-primary); font: 600 .84rem var(--font-mono); }
+.brand-mark::before,
+.brand-mark::after { position: absolute; width: 78%; height: 78%; pointer-events: none; content: ''; }
+.brand-mark::before { top: 0; right: 0; border-top: 1px solid rgba(var(--accent-rgb), .78); border-right: 1px solid rgba(var(--accent-rgb), .78); }
+.brand-mark::after { bottom: 0; left: 0; border-bottom: 1px solid rgba(var(--accent-rgb), .78); border-left: 1px solid rgba(var(--accent-rgb), .78); }
 .brand-copy { display: grid; gap: 1px; }
 .brand-copy strong { font: 600 .9rem var(--font-heading); }
 .brand-copy small { color: var(--theme-muted); font-size: .72rem; }
