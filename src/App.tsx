@@ -57,6 +57,8 @@ function App({
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches)
   const appShell = useRef<HTMLDivElement>(null)
   const previousSection = useRef<SectionId>('top')
+  const navigationTarget = useRef<SectionId | null>(null)
+  const navigationReleaseTimer = useRef<number | null>(null)
   const lastTrigger = useRef<HTMLButtonElement | null>(null)
   const lastBrandActivation = useRef(0)
   const activeTheme = sectionThemes[activeSection]
@@ -94,6 +96,34 @@ function App({
     })
   }, [projects])
 
+  useEffect(() => {
+    const releaseNavigationTarget = () => {
+      navigationTarget.current = null
+      if (navigationReleaseTimer.current !== null) {
+        window.clearTimeout(navigationReleaseTimer.current)
+        navigationReleaseTimer.current = null
+      }
+    }
+    const releaseOnKey = (event: KeyboardEvent) => {
+      if (['ArrowDown', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp', ' '].includes(event.key)) {
+        releaseNavigationTarget()
+      }
+    }
+
+    window.addEventListener('scrollend', releaseNavigationTarget)
+    window.addEventListener('wheel', releaseNavigationTarget, { passive: true })
+    window.addEventListener('touchstart', releaseNavigationTarget, { passive: true })
+    window.addEventListener('keydown', releaseOnKey)
+
+    return () => {
+      releaseNavigationTarget()
+      window.removeEventListener('scrollend', releaseNavigationTarget)
+      window.removeEventListener('wheel', releaseNavigationTarget)
+      window.removeEventListener('touchstart', releaseNavigationTarget)
+      window.removeEventListener('keydown', releaseOnKey)
+    }
+  }, [])
+
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
     const context = gsap.context(() => {
@@ -101,16 +131,17 @@ function App({
         gsap.utils.toArray<HTMLElement>('.reveal').forEach((element) => {
           gsap.fromTo(
             element,
-            { autoAlpha: 0, y: 48 },
+            { opacity: 0, y: 24 },
             {
-              autoAlpha: 1,
+              opacity: 1,
               y: 0,
-              ease: 'none',
+              duration: 0.38,
+              ease: 'power2.out',
               scrollTrigger: {
                 trigger: element,
-                start: 'top 88%',
-                end: 'top 58%',
-                scrub: 0.55,
+                start: 'top 90%',
+                toggleActions: 'play none none none',
+                once: true,
               },
             },
           )
@@ -131,7 +162,7 @@ function App({
           start: 'top center',
           end: 'bottom center',
           onToggle: (self) => {
-            if (self.isActive) setActiveSection(id)
+            if (self.isActive && !navigationTarget.current) setActiveSection(id)
           },
         })
       })
@@ -154,8 +185,8 @@ function App({
     } else {
       gsap.to(shell, {
         ...variables,
-        duration: sectionChanged ? 1.2 : 0,
-        ease: 'expo.inOut',
+        duration: sectionChanged ? 0.38 : 0,
+        ease: 'power2.out',
         overwrite: true,
       })
 
@@ -167,6 +198,33 @@ function App({
       gsap.killTweensOf(shell)
     }
   }, [activeSection, activeTheme, reducedMotion])
+
+  const handleSectionNavigation = useCallback((
+    event: React.MouseEvent<HTMLAnchorElement>,
+    section: SectionId,
+  ) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+    const destination = document.getElementById(section)
+    if (!destination) return
+
+    event.preventDefault()
+    navigationTarget.current = section
+    setActiveSection(section)
+    window.history.pushState(null, '', `#${section}`)
+    destination.scrollIntoView?.({
+      behavior: reducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    })
+
+    if (navigationReleaseTimer.current !== null) {
+      window.clearTimeout(navigationReleaseTimer.current)
+    }
+    navigationReleaseTimer.current = window.setTimeout(() => {
+      navigationTarget.current = null
+      navigationReleaseTimer.current = null
+    }, reducedMotion ? 0 : 1400)
+  }, [reducedMotion])
 
   const openProject = (project: Project, trigger: HTMLButtonElement) => {
     lastTrigger.current = trigger
@@ -190,6 +248,7 @@ function App({
       return
     }
     lastBrandActivation.current = now
+    handleSectionNavigation(event, 'top')
   }
 
   const progressStyle: ThemeCSSProperties = {
@@ -253,6 +312,7 @@ function App({
                 href={`#${id}`}
                 key={id}
                 aria-current={isActive ? 'location' : undefined}
+                onClick={(event) => handleSectionNavigation(event, id)}
               >
                 <span className="nav-active-dot" aria-hidden="true" />
                 <span>{label}</span>
@@ -287,7 +347,7 @@ function App({
                 {portfolio.identity.summary}
               </p>
               <div className="hero-actions">
-                <a className="primary-button" href="#projects">
+                <a className="primary-button" href="#projects" onClick={(event) => handleSectionNavigation(event, 'projects')}>
                   View my projects <ArrowRight size={18} aria-hidden="true" />
                 </a>
                 <a className="text-link" href="/resume" download={contact.resumeName}>
@@ -312,7 +372,7 @@ function App({
             </div>
           </div>
 
-          <a className="scroll-cue" href="#profile">
+          <a className="scroll-cue" href="#profile" onClick={(event) => handleSectionNavigation(event, 'profile')}>
             <span>More about me</span>
             <ArrowDown size={16} aria-hidden="true" />
           </a>

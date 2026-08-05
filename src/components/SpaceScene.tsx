@@ -31,7 +31,7 @@ function tweenColor(color: THREE.Color, value: string, duration: number) {
     g: target.g,
     b: target.b,
     duration,
-    ease: 'expo.inOut',
+    ease: 'power2.out',
     overwrite: true,
   })
 }
@@ -118,12 +118,12 @@ function LidarCloud({ color }: { color: string }) {
 function ProjectBeacons({ activeProjectId, theme }: { activeProjectId: string | null; theme: SectionTheme }) {
   const group = useRef<THREE.Group>(null)
   const selectedColor = activeProjectId
-    ? ({
+    ? {
         'flash-cards': theme.primary,
         'esports-organizer': theme.glow,
         'vehicle-reservation': theme.secondary,
         'space-invaders': theme.planet.detail,
-      }[activeProjectId] ?? theme.primary)
+      }[activeProjectId] ?? theme.primary
     : theme.primary
 
   useFrame((_, delta) => {
@@ -165,67 +165,342 @@ const orbitPoints: [number, number, number][] = Array.from({ length: 97 }, (_, i
   return [Math.cos(angle) * 2.72, 0, Math.sin(angle) * 1.18]
 })
 
+function smoothstep(edge0: number, edge1: number, value: number) {
+  const amount = THREE.MathUtils.clamp((value - edge0) / (edge1 - edge0), 0, 1)
+  return amount * amount * (3 - 2 * amount)
+}
+
+function textureNoise(x: number, y: number) {
+  const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123
+  return value - Math.floor(value)
+}
+
+function interpolatedNoise(x: number, y: number) {
+  const x0 = Math.floor(x)
+  const y0 = Math.floor(y)
+  const tx = smoothstep(0, 1, x - x0)
+  const ty = smoothstep(0, 1, y - y0)
+  const top = THREE.MathUtils.lerp(textureNoise(x0, y0), textureNoise(x0 + 1, y0), tx)
+  const bottom = THREE.MathUtils.lerp(textureNoise(x0, y0 + 1), textureNoise(x0 + 1, y0 + 1), tx)
+  return THREE.MathUtils.lerp(top, bottom, ty)
+}
+
+function fractalNoise(x: number, y: number) {
+  let amplitude = 0.55
+  let frequency = 1
+  let value = 0
+  let weight = 0
+
+  for (let octave = 0; octave < 5; octave += 1) {
+    value += interpolatedNoise(x * frequency, y * frequency) * amplitude
+    weight += amplitude
+    amplitude *= 0.5
+    frequency *= 2.03
+  }
+
+  return value / weight
+}
+
+function wrappedDistance(value: number, center: number) {
+  const distance = Math.abs(value - center)
+  return Math.min(distance, 1 - distance)
+}
+
+function continentField(u: number, v: number) {
+  const ellipse = (
+    centerX: number,
+    centerY: number,
+    radiusX: number,
+    radiusY: number,
+    rotation: number,
+  ) => {
+    const x = wrappedDistance(u, centerX) * (u < centerX && Math.abs(u - centerX) < 0.5 ? -1 : 1)
+    const y = v - centerY
+    const cosine = Math.cos(rotation)
+    const sine = Math.sin(rotation)
+    const rotatedX = x * cosine - y * sine
+    const rotatedY = x * sine + y * cosine
+    return 1 - Math.hypot(rotatedX / radiusX, rotatedY / radiusY)
+  }
+
+  // Broad, overlapping plates suggest familiar geography without creating raised clay meshes.
+  const plates = [
+    ellipse(0.2, 0.68, 0.12, 0.15, -0.2),
+    ellipse(0.27, 0.59, 0.08, 0.1, 0.35),
+    ellipse(0.31, 0.38, 0.065, 0.2, -0.38),
+    ellipse(0.49, 0.79, 0.055, 0.075, 0.12),
+    ellipse(0.53, 0.49, 0.085, 0.19, 0.18),
+    ellipse(0.57, 0.67, 0.12, 0.075, -0.12),
+    ellipse(0.69, 0.67, 0.18, 0.09, 0.08),
+    ellipse(0.79, 0.59, 0.11, 0.13, -0.35),
+    ellipse(0.83, 0.31, 0.075, 0.065, 0.15),
+  ]
+  const land = Math.max(...plates)
+  const carvedWaterways = Math.max(
+    ellipse(0.43, 0.62, 0.075, 0.035, -0.08),
+    ellipse(0.58, 0.59, 0.035, 0.08, 0.35),
+  )
+  const coastlineNoise = (fractalNoise(u * 9.5, v * 8.5) - 0.5) * 0.42
+
+  return Math.min(land + coastlineNoise, -carvedWaterways + 0.16)
+}
+
+function createIllustratedEarthTexture(planet: PlanetTheme) {
+  const width = 768
+  const height = 384
+  const colorData = new Uint8Array(width * height * 4)
+  const oceanDeep = new THREE.Color(planet.surface).multiplyScalar(0.52)
+  const atmosphereColor = new THREE.Color(planet.atmosphere)
+  const oceanMid = new THREE.Color(planet.surface).lerp(atmosphereColor, 0.48)
+  const oceanLight = new THREE.Color(planet.surface).lerp(atmosphereColor, 0.78)
+  const coast = new THREE.Color(planet.surface).multiplyScalar(0.38)
+  const highlightColor = new THREE.Color(planet.highlight)
+  const landShadow = new THREE.Color(planet.detail).lerp(highlightColor, 0.08)
+  const landMid = new THREE.Color(planet.detail).lerp(highlightColor, 0.28)
+  const landLight = new THREE.Color(planet.detail).lerp(highlightColor, 0.64)
+  const landBright = new THREE.Color(planet.detail).lerp(highlightColor, 0.9)
+  const pixelColor = new THREE.Color()
+
+  for (let y = 0; y < height; y += 1) {
+    const v = 1 - y / (height - 1)
+
+    for (let x = 0; x < width; x += 1) {
+      const u = x / (width - 1)
+      const index = (y * width + x) * 4
+      const landField = continentField(u, v)
+      const terrain = fractalNoise(u * 12 + 5, v * 10 + 9)
+      const oceanFlow = THREE.MathUtils.clamp(
+        0.5
+          + Math.sin(u * Math.PI * 5 + Math.sin(v * Math.PI * 4) * 1.3) * 0.16
+          + Math.sin(u * Math.PI * 9 - v * Math.PI * 5) * 0.09
+          + (fractalNoise(u * 4 + 21, v * 4 + 13) - 0.5) * 0.28,
+        0,
+        1,
+      )
+      const oceanBand = Math.floor(oceanFlow * 5) / 4
+      const oceanContour = Math.abs(oceanFlow * 5 - Math.round(oceanFlow * 5)) < 0.045
+
+      pixelColor.copy(oceanDeep)
+      if (oceanBand >= 0.25) pixelColor.copy(oceanMid)
+      if (oceanBand >= 0.75) pixelColor.copy(oceanLight)
+      if (oceanContour) pixelColor.lerp(atmosphereColor, 0.14)
+
+      if (landField > -0.045) pixelColor.copy(coast)
+      if (landField > -0.016) {
+        const landBand = Math.floor(terrain * 4)
+        if (landBand <= 0) pixelColor.copy(landShadow)
+        else if (landBand === 1) pixelColor.copy(landMid)
+        else if (landBand === 2) pixelColor.copy(landLight)
+        else pixelColor.copy(landBright)
+
+        const innerCoast = smoothstep(-0.016, 0.075, landField)
+        pixelColor.lerp(landBright, (1 - innerCoast) * 0.9)
+      }
+
+      colorData[index] = Math.round(THREE.MathUtils.clamp(pixelColor.r, 0, 1) * 255)
+      colorData[index + 1] = Math.round(THREE.MathUtils.clamp(pixelColor.g, 0, 1) * 255)
+      colorData[index + 2] = Math.round(THREE.MathUtils.clamp(pixelColor.b, 0, 1) * 255)
+      colorData[index + 3] = 255
+    }
+  }
+
+  const texture = new THREE.DataTexture(colorData, width, height, THREE.RGBAFormat)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.minFilter = THREE.LinearMipmapLinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.generateMipmaps = true
+  texture.needsUpdate = true
+  return texture
+}
+
+function createTextureFromData(data: Uint8Array, width: number, height: number) {
+  const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.minFilter = THREE.LinearMipmapLinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.generateMipmaps = true
+  texture.needsUpdate = true
+  return texture
+}
+
+function writeTextureColor(data: Uint8Array, index: number, color: THREE.Color) {
+  data[index] = Math.round(THREE.MathUtils.clamp(color.r, 0, 1) * 255)
+  data[index + 1] = Math.round(THREE.MathUtils.clamp(color.g, 0, 1) * 255)
+  data[index + 2] = Math.round(THREE.MathUtils.clamp(color.b, 0, 1) * 255)
+  data[index + 3] = 255
+}
+
+function illustratedDistance(u: number, v: number, centerX: number, centerY: number, radius: number) {
+  // Equirectangular textures span 2π horizontally and π vertically.
+  const x = wrappedDistance(u, centerX) * 2
+  const y = v - centerY
+  return Math.hypot(x, y) / radius
+}
+
+function createIllustratedMarsTexture(planet: PlanetTheme) {
+  const width = 768
+  const height = 384
+  const data = new Uint8Array(width * height * 4)
+  const deep = new THREE.Color(planet.detail).multiplyScalar(0.62)
+  const shadow = new THREE.Color(planet.detail).lerp(new THREE.Color(planet.surface), 0.4)
+  const mid = new THREE.Color(planet.surface)
+  const bright = new THREE.Color(planet.surface).lerp(new THREE.Color(planet.atmosphere), 0.72)
+  const rim = new THREE.Color(planet.atmosphere).lerp(new THREE.Color(planet.highlight), 0.28)
+  const pixelColor = new THREE.Color()
+  const craters = [
+    [0.16, 0.7, 0.028], [0.29, 0.34, 0.085], [0.42, 0.63, 0.052],
+    [0.56, 0.78, 0.022], [0.68, 0.49, 0.035], [0.78, 0.27, 0.068],
+    [0.89, 0.62, 0.021], [0.52, 0.22, 0.035], [0.08, 0.43, 0.018],
+  ] as const
+
+  for (let y = 0; y < height; y += 1) {
+    const v = 1 - y / (height - 1)
+    for (let x = 0; x < width; x += 1) {
+      const u = x / (width - 1)
+      const index = (y * width + x) * 4
+      const terrain = THREE.MathUtils.clamp(
+        fractalNoise(u * 7 + 19, v * 6 + 31)
+          + Math.sin(u * Math.PI * 4 + v * Math.PI * 3) * 0.12,
+        0,
+        1,
+      )
+      const terrainBand = Math.floor(terrain * 5)
+
+      if (terrainBand <= 0) pixelColor.copy(deep)
+      else if (terrainBand <= 1) pixelColor.copy(shadow)
+      else if (terrainBand <= 3) pixelColor.copy(mid)
+      else pixelColor.copy(bright)
+
+      for (const [centerX, centerY, radius] of craters) {
+        const distance = illustratedDistance(u, v, centerX, centerY, radius)
+        if (distance < 1.18 && distance > 0.84) pixelColor.copy(rim)
+        else if (distance <= 0.84) {
+          pixelColor.copy(deep).lerp(shadow, smoothstep(0.1, 0.82, distance))
+          if (distance < 0.22) pixelColor.lerp(bright, 0.18)
+        }
+      }
+
+      const etchedContour = Math.abs(terrain * 6 - Math.round(terrain * 6)) < 0.025
+      if (etchedContour) pixelColor.lerp(rim, 0.15)
+      writeTextureColor(data, index, pixelColor)
+    }
+  }
+
+  return createTextureFromData(data, width, height)
+}
+
+function createIllustratedNeptuneTexture(planet: PlanetTheme) {
+  const width = 768
+  const height = 384
+  const data = new Uint8Array(width * height * 4)
+  const palette = [
+    new THREE.Color(planet.ring).lerp(new THREE.Color(planet.surface), 0.25),
+    new THREE.Color(planet.surface),
+    new THREE.Color(planet.surface).lerp(new THREE.Color(planet.detail), 0.58),
+    new THREE.Color(planet.detail),
+    new THREE.Color(planet.detail).lerp(new THREE.Color(planet.atmosphere), 0.62),
+    new THREE.Color(planet.atmosphere).lerp(new THREE.Color(planet.highlight), 0.62),
+  ]
+  const stormDark = new THREE.Color(planet.ring).lerp(new THREE.Color(planet.surface), 0.4)
+  const stormLight = new THREE.Color(planet.highlight)
+  const pixelColor = new THREE.Color()
+  const storms = [[0.18, 0.68, 0.025], [0.56, 0.34, 0.052], [0.81, 0.72, 0.034]] as const
+
+  for (let y = 0; y < height; y += 1) {
+    const v = 1 - y / (height - 1)
+    for (let x = 0; x < width; x += 1) {
+      const u = x / (width - 1)
+      const index = (y * width + x) * 4
+      const distortion = (fractalNoise(u * 4 + 7, v * 5 + 23) - 0.5) * 2.2
+      const phase = v * Math.PI * 13
+        + Math.sin(u * Math.PI * 4) * 1.35
+        + Math.sin(u * Math.PI * 9 - v * Math.PI * 3) * 0.46
+        + distortion
+      const ribbon = 0.5 + Math.sin(phase) * 0.32 + Math.sin(phase * 0.47 + 1.1) * 0.18
+      const paletteIndex = THREE.MathUtils.clamp(Math.floor(ribbon * palette.length), 0, palette.length - 1)
+      pixelColor.copy(palette[paletteIndex])
+
+      const fineRibbon = Math.abs(Math.sin(phase * 1.96))
+      if (fineRibbon < 0.055) pixelColor.lerp(stormLight, 0.56)
+
+      for (const [centerX, centerY, radius] of storms) {
+        const distance = illustratedDistance(u, v, centerX, centerY, radius)
+        if (distance < 1.25 && distance > 0.82) pixelColor.copy(stormLight)
+        else if (distance <= 0.82) pixelColor.copy(stormDark).lerp(stormLight, smoothstep(0.05, 0.8, distance) * 0.44)
+      }
+
+      writeTextureColor(data, index, pixelColor)
+    }
+  }
+
+  return createTextureFromData(data, width, height)
+}
+
+function createIllustratedMoonTexture(planet: PlanetTheme) {
+  const width = 768
+  const height = 384
+  const data = new Uint8Array(width * height * 4)
+  const light = new THREE.Color(planet.highlight)
+  const base = new THREE.Color(planet.atmosphere).lerp(light, 0.56)
+  const shade = new THREE.Color(planet.surface).lerp(new THREE.Color(planet.atmosphere), 0.44)
+  const crater = new THREE.Color(planet.detail).lerp(new THREE.Color(planet.surface), 0.5)
+  const craterRim = new THREE.Color(planet.atmosphere).lerp(light, 0.28)
+  const pixelColor = new THREE.Color()
+  const craters = [
+    [0.09, 0.28, 0.02], [0.14, 0.72, 0.055], [0.23, 0.46, 0.023],
+    [0.32, 0.79, 0.075], [0.38, 0.25, 0.036], [0.47, 0.56, 0.03],
+    [0.58, 0.32, 0.052], [0.66, 0.74, 0.028], [0.74, 0.47, 0.02],
+    [0.82, 0.22, 0.067], [0.9, 0.62, 0.045], [0.96, 0.38, 0.018],
+  ] as const
+
+  for (let y = 0; y < height; y += 1) {
+    const v = 1 - y / (height - 1)
+    for (let x = 0; x < width; x += 1) {
+      const u = x / (width - 1)
+      const index = (y * width + x) * 4
+      const paperGrain = (fractalNoise(u * 11 + 41, v * 9 + 17) - 0.5) * 0.12
+      const sideShadow = smoothstep(0.64, 0.92, u + Math.sin(v * Math.PI) * 0.06)
+      const lowerShadow = smoothstep(0.72, 0.98, 1 - v)
+      pixelColor.copy(base).lerp(light, 0.16 + paperGrain)
+      pixelColor.lerp(shade, Math.max(sideShadow * 0.72, lowerShadow * 0.48))
+
+      for (const [centerX, centerY, radius] of craters) {
+        const distance = illustratedDistance(u, v, centerX, centerY, radius)
+        if (distance < 1.14 && distance > 0.86) pixelColor.copy(craterRim)
+        else if (distance <= 0.86) pixelColor.copy(crater).lerp(shade, smoothstep(0.12, 0.86, distance) * 0.5)
+      }
+
+      writeTextureColor(data, index, pixelColor)
+    }
+  }
+
+  return createTextureFromData(data, width, height)
+}
+
+function createIllustratedPlanetTexture(planet: PlanetTheme) {
+  if (planet.variant === 'earth') return createIllustratedEarthTexture(planet)
+  if (planet.variant === 'mars') return createIllustratedMarsTexture(planet)
+  if (planet.variant === 'neptune') return createIllustratedNeptuneTexture(planet)
+  return createIllustratedMoonTexture(planet)
+}
+
+function IllustratedPlanetSurface({ planet }: { planet: PlanetTheme }) {
+  const texture = useMemo(() => createIllustratedPlanetTexture(planet), [planet])
+
+  useEffect(() => () => texture.dispose(), [texture])
+
+  return (
+    <mesh>
+      <sphereGeometry args={[1.62, 96, 96]} />
+      <meshBasicMaterial map={texture} toneMapped={false} />
+    </mesh>
+  )
+}
+
 function PlanetDetails({ planet }: { planet: PlanetTheme }) {
-  if (planet.variant === 'earth') {
-    return (
-      <group>
-        <mesh position={[0.35, 0.35, 1.52]} scale={[0.9, 0.48, 0.16]} rotation={[0.1, 0.2, -0.35]}>
-          <sphereGeometry args={[0.72, 18, 14]} />
-          <meshStandardMaterial color={planet.detail} roughness={0.95} />
-        </mesh>
-        <mesh position={[-0.82, -0.28, 1.3]} scale={[0.52, 0.86, 0.16]} rotation={[0, -0.38, 0.28]}>
-          <sphereGeometry args={[0.58, 16, 12]} />
-          <meshStandardMaterial color={planet.highlight} roughness={0.95} />
-        </mesh>
-        <mesh rotation={[Math.PI / 2.25, 0.2, 0.24]}>
-          <torusGeometry args={[1.61, 0.018, 8, 96]} />
-          <meshBasicMaterial color={planet.highlight} transparent opacity={0.62} />
-        </mesh>
-        <mesh rotation={[Math.PI / 1.78, -0.1, -0.2]}>
-          <torusGeometry args={[1.6, 0.012, 8, 96]} />
-          <meshBasicMaterial color={planet.highlight} transparent opacity={0.34} />
-        </mesh>
-      </group>
-    )
-  }
-
-  if (planet.variant === 'mars') {
-    return (
-      <group>
-        {[
-          [-0.72, 0.52, 1.42, 0.24],
-          [0.54, 0.22, 1.52, 0.17],
-          [0.16, -0.72, 1.44, 0.28],
-        ].map(([x, y, z, size], index) => (
-          <mesh position={[x, y, z]} key={index} rotation={[0, 0, index * 0.7]}>
-            <torusGeometry args={[size, 0.035, 8, 28]} />
-            <meshStandardMaterial color={planet.detail} roughness={1} />
-          </mesh>
-        ))}
-        <mesh position={[-0.2, 0.76, 1.5]} scale={[1.3, 0.22, 0.1]}>
-          <sphereGeometry args={[0.65, 18, 12]} />
-          <meshBasicMaterial color={planet.highlight} transparent opacity={0.18} />
-        </mesh>
-      </group>
-    )
-  }
-
-  if (planet.variant === 'neptune') {
-    return (
-      <group>
-        {[-0.78, -0.38, 0.02, 0.42, 0.82].map((y, index) => (
-          <mesh position={[0, y, 0]} key={y} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[Math.sqrt(Math.max(0.4, 2.55 - y * y)), index % 2 ? 0.022 : 0.038, 8, 96]} />
-            <meshBasicMaterial color={index % 2 ? planet.highlight : planet.detail} transparent opacity={0.42} />
-          </mesh>
-        ))}
-        <mesh position={[0.68, -0.35, 1.48]} scale={[1.4, 0.55, 0.18]} rotation={[0, 0.15, -0.25]}>
-          <sphereGeometry args={[0.22, 18, 12]} />
-          <meshBasicMaterial color={planet.highlight} transparent opacity={0.7} />
-        </mesh>
-      </group>
-    )
-  }
+  if (planet.variant === 'earth' || planet.variant === 'mars' || planet.variant === 'neptune' || planet.variant === 'moon') return null
 
   if (planet.variant === 'saturn') {
     return (
@@ -242,24 +517,6 @@ function PlanetDetails({ planet }: { planet: PlanetTheme }) {
     )
   }
 
-  if (planet.variant === 'moon') {
-    return (
-      <group>
-        {[
-          [-0.62, 0.45, 1.43, 0.28],
-          [0.52, 0.7, 1.36, 0.2],
-          [0.62, -0.34, 1.43, 0.34],
-          [-0.15, -0.62, 1.5, 0.18],
-        ].map(([x, y, z, size], index) => (
-          <mesh position={[x, y, z]} key={index}>
-            <torusGeometry args={[size, 0.045, 8, 30]} />
-            <meshStandardMaterial color={planet.detail} roughness={1} />
-          </mesh>
-        ))}
-      </group>
-    )
-  }
-
   return null
 }
 
@@ -268,6 +525,10 @@ function Planet({ planet, reducedMotion }: { planet: PlanetTheme; reducedMotion:
   const glowMaterial = useRef<THREE.MeshBasicMaterial>(null)
   const dotMaterial = useRef<THREE.PointsMaterial>(null)
   const scanLine = useRef<THREE.Group>(null)
+  const hasIllustratedSurface = planet.variant === 'earth'
+    || planet.variant === 'mars'
+    || planet.variant === 'neptune'
+    || planet.variant === 'moon'
 
   useFrame(({ clock }, delta) => {
     if (reducedMotion) return
@@ -299,31 +560,39 @@ function Planet({ planet, reducedMotion }: { planet: PlanetTheme; reducedMotion:
           depthWrite={false}
         />
       </mesh>
-      <mesh>
-        <sphereGeometry args={[1.62, 48, 48]} />
-        <meshStandardMaterial color={planet.surface} roughness={0.84} metalness={0.08} />
-      </mesh>
-      <mesh scale={1.045}>
-        <sphereGeometry args={[1.62, 28, 28]} />
-        <meshBasicMaterial color={planet.detail} transparent opacity={0.075} wireframe />
-      </mesh>
+      {hasIllustratedSurface ? (
+        <IllustratedPlanetSurface planet={planet} />
+      ) : (
+        <mesh>
+          <sphereGeometry args={[1.62, 48, 48]} />
+          <meshStandardMaterial color={planet.surface} roughness={0.84} metalness={0.08} />
+        </mesh>
+      )}
+      {!hasIllustratedSurface && (
+        <mesh scale={1.045}>
+          <sphereGeometry args={[1.62, 28, 28]} />
+          <meshBasicMaterial color={planet.detail} transparent opacity={0.075} wireframe />
+        </mesh>
+      )}
       <mesh scale={1.09}>
         <sphereGeometry args={[1.62, 32, 32]} />
         <meshBasicMaterial color={planet.atmosphere} transparent opacity={0.13} side={THREE.BackSide} />
       </mesh>
-      <points scale={1.052}>
-        <sphereGeometry args={[1.62, 20, 16]} />
-        <pointsMaterial
-          ref={dotMaterial}
-          color={planet.highlight}
-          size={0.02}
-          sizeAttenuation
-          transparent
-          opacity={0.2}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </points>
+      {!hasIllustratedSurface && (
+        <points scale={1.052}>
+          <sphereGeometry args={[1.62, 20, 16]} />
+          <pointsMaterial
+            ref={dotMaterial}
+            color={planet.highlight}
+            size={0.02}
+            sizeAttenuation
+            transparent
+            opacity={0.2}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </points>
+      )}
 
       <PlanetDetails planet={planet} />
 
@@ -451,20 +720,20 @@ function PlanetTransition({
     if (previous) {
       timeline.to(previous.position, {
         x: outgoingOffset,
-        duration: 0.5,
-        ease: 'power2.inOut',
+        duration: 0.28,
+        ease: 'power2.in',
       }, 0)
       timeline.to(previous.scale, {
         x: 0.72,
         y: 0.72,
         z: 0.72,
-        duration: 0.5,
-        ease: 'power2.inOut',
+        duration: 0.28,
+        ease: 'power2.in',
       }, 0)
     }
 
-    timeline.to(next.position, { x: 0, duration: 0.68, ease: 'expo.out' }, 0.52)
-    timeline.to(next.scale, { x: 1, y: 1, z: 1, duration: 0.68, ease: 'expo.out' }, 0.52)
+    timeline.to(next.position, { x: 0, duration: 0.4, ease: 'power3.out' }, 0.24)
+    timeline.to(next.scale, { x: 1, y: 1, z: 1, duration: 0.4, ease: 'power3.out' }, 0.24)
 
     return () => {
       timeline.kill()
@@ -498,7 +767,7 @@ function SceneEnvironment({ theme, reducedMotion }: Pick<SpaceSceneProps, 'theme
   const fillLight = useRef<THREE.PointLight>(null)
 
   useLayoutEffect(() => {
-    const duration = reducedMotion ? 0 : 1.2
+    const duration = reducedMotion ? 0 : 0.38
     const tweens = [tweenColor(background, theme.background, duration)]
 
     if (fog.current) tweens.push(tweenColor(fog.current.color, theme.fog, duration))
@@ -535,13 +804,13 @@ function SceneRig({
   const cameraTarget = useRef(new THREE.Vector3(...theme.planet.cameraTarget))
 
   useLayoutEffect(() => {
-    const duration = reducedMotion ? 0 : 1.2
+    const duration = reducedMotion ? 0 : 0.42
     const cameraTween = gsap.to(cameraPosition.current, {
       x: theme.planet.camera[0],
       y: theme.planet.camera[1],
       z: theme.planet.camera[2],
       duration,
-      ease: 'expo.inOut',
+      ease: 'power2.out',
       overwrite: true,
     })
     const targetTween = gsap.to(cameraTarget.current, {
@@ -549,7 +818,7 @@ function SceneRig({
       y: theme.planet.cameraTarget[1],
       z: theme.planet.cameraTarget[2],
       duration,
-      ease: 'expo.inOut',
+      ease: 'power2.out',
       overwrite: true,
     })
 
