@@ -2,12 +2,12 @@
   "identity": {
     "name": "Victor Santos",
     "role": "CS & Engineering student",
-    "kicker": "CS & Engineering student · UPRM",
-    "headlineLead": "I build software",
-    "headlineMiddle": "and learn by",
-    "headlineEmphasis": "shipping it.",
-    "summary": "I’m Victor Santos, a Computer Science and Engineering student at UPRM. I build mobile apps with Flutter and Firebase, web projects, and research tools—often using AI-assisted coding to learn and iterate.",
-    "building": "Mobile, web, and research tools",
+    "kicker": "Computer Science & Engineering student at UPRM",
+    "headlineLead": "I build mobile apps,",
+    "headlineMiddle": "web projects, and",
+    "headlineEmphasis": "research tools.",
+    "summary": "I’m a Computer Science and Engineering student at UPRM. My work ranges from Flutter features used by students to a real-time LiDAR pipeline for autonomous drone landing research.",
+    "building": "LiDRON research and MiUni features",
     "status": "Open to internships & co-ops",
     "location": "Mayagüez, Puerto Rico"
   },

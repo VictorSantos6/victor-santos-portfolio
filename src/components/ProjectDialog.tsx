@@ -101,7 +101,7 @@ export function ProjectDialog({ project, onClose, reducedMotion }: ProjectDialog
       >
         <header className="dialog-header">
           <div>
-            <p className="signal-label">{project.signal}</p>
+            <p className="signal-label">{project.signal.split('/')[1]?.trim()}</p>
             <h2 id="project-dialog-title">{project.name}</h2>
           </div>
           <button ref={closeButton} className="icon-button" type="button" onClick={requestClose} aria-label="Close project details">
@@ -116,17 +116,17 @@ export function ProjectDialog({ project, onClose, reducedMotion }: ProjectDialog
 
         <div className="dialog-grid" id="project-dialog-description">
           <section>
-            <p className="mini-label">The challenge</p>
+            <p className="mini-label">Problem</p>
             <p>{project.problem}</p>
           </section>
           <section>
-            <p className="mini-label">My contribution</p>
+            <p className="mini-label">My role</p>
             <p>{project.contribution}</p>
           </section>
         </div>
 
         <section className="outcomes-panel">
-          <p className="mini-label">What it includes</p>
+          <p className="mini-label">Outcomes</p>
           <ul>
             {project.outcomes.map((outcome) => (
               <li key={outcome}>

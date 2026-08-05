@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -54,7 +54,9 @@ describe('portfolio experience', () => {
   it('renders verified resume content and primary contact links', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { level: 1, name: /i build software and learn by shipping it/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Victor Santos' })).toBeInTheDocument()
+    expect(screen.getByText(/i build mobile apps/i)).toBeInTheDocument()
+    expect(document.querySelector('.hero-summary')).not.toHaveTextContent(/AI-assisted coding/i)
     expect(screen.getByText('LiDRON Research')).toBeInTheDocument()
     expect(screen.getByText('50%')).toBeInTheDocument()
     expect(screen.getByText('100%')).toBeInTheDocument()
@@ -70,6 +72,17 @@ describe('portfolio experience', () => {
     expect(screen.getByRole('link', { name: 'Intro' })).toHaveAttribute('aria-current', 'location')
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-planet', 'exoplanet')
     expect(document.querySelector('.css-space-fallback')).toBeInTheDocument()
+  })
+
+  it('makes project evidence readable before the dialog opens', () => {
+    render(<App />)
+
+    const card = screen.getByRole('button', { name: /flash cards app/i })
+    expect(card).toHaveTextContent(/simple study app/i)
+    expect(card).toHaveTextContent(/built the Flutter app from scratch/i)
+    expect(card).toHaveTextContent(/deck creation and flashcard editing/i)
+    expect(document.querySelector('.space-backdrop')).toBeInTheDocument()
+    expect(document.querySelector('.mission-rail')).not.toBeInTheDocument()
   })
 
   it('opens project cases through a deep-linkable dialog and closes with Escape', async () => {
@@ -129,7 +142,8 @@ describe('portfolio experience', () => {
     window.history.replaceState(null, '', '#project-space-invaders')
     render(<App />)
 
-    expect(screen.getByRole('dialog', { name: /space invaders/i })).toBeInTheDocument()
-    expect(screen.getByText(/without external libraries/i)).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog', { name: /space invaders/i })
+    expect(dialog).toBeInTheDocument()
+    expect(within(dialog).getByText(/without external libraries/i)).toBeInTheDocument()
   })
 })
