@@ -12,6 +12,24 @@ afterEach(() => {
 })
 
 describe('portfolio experience', () => {
+  it('keeps the bundled hero copy stable instead of replacing it after load', async () => {
+    const stalePublishedContent = structuredClone(defaultPortfolio)
+    stalePublishedContent.identity.headlineLead = 'I build software and learn by'
+    stalePublishedContent.identity.headlineMiddle = ''
+    stalePublishedContent.identity.headlineEmphasis = 'shipping it.'
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => stalePublishedContent,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<App />)
+
+    expect(screen.getByText(/i build mobile apps/i)).toBeInTheDocument()
+    expect(screen.queryByText(/i build software and learn by/i)).not.toBeInTheDocument()
+    await waitFor(() => expect(fetchMock).not.toHaveBeenCalled())
+  })
+
   it('maps every portfolio chapter to its planetary atmosphere', () => {
     expect(Object.fromEntries(
       Object.entries(sectionThemes).map(([section, theme]) => [section, theme.planet.variant]),

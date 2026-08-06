@@ -50,7 +50,7 @@ interface AppProps {
   onExitPreview?: () => void
 }
 
-function App({ initialContent = defaultPortfolio, loadPublished = true, preview = false, onExitPreview }: AppProps) {
+function App({ initialContent = defaultPortfolio, loadPublished = false, preview = false, onExitPreview }: AppProps) {
   const reducedMotion = useReducedMotion()
   const webGLSupported = useWebGL()
   const [portfolio, setPortfolio] = useState(initialContent)
