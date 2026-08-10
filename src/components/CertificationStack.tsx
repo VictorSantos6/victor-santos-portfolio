@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, ExternalLink, Orbit, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Certification } from '../types'
 
 interface CertificationStackProps {
@@ -126,7 +127,7 @@ export function CertificationStack({ items, reducedMotion }: CertificationStackP
         )}
       </section>
 
-      {selected && (
+      {selected && createPortal((
         <div className="certificate-viewer" role="presentation" onMouseDown={(event) => event.currentTarget === event.target && closeViewer()}>
           <div ref={dialog} className="certificate-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="certificate-viewer-title">
             <header>
@@ -141,7 +142,7 @@ export function CertificationStack({ items, reducedMotion }: CertificationStackP
             </div>
           </div>
         </div>
-      )}
+      ), document.querySelector('.app-shell') ?? document.body)}
     </>
   )
 }

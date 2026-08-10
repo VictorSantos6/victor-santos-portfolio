@@ -139,12 +139,14 @@ main, .site-header, footer, .preview-bar, .skip-link { position: relative; z-ind
 .learning-stack-heading > p { margin: 0; color: var(--theme-muted); font: 600 .78rem/1 var(--font-name); }
 .learning-stack-heading > p span { color: var(--cta); font-size: 1.25rem; }
 .learning-stack-deck { position: relative; height: 480px; margin: 20px -22px 0; perspective: 1200px; }
+.certification-stack .learning-stack-deck { height: 640px; }
 .learning-orbit { position: absolute; top: 52%; left: 50%; width: min(780px, 92%); aspect-ratio: 2.7; border: 1px solid rgba(var(--accent-rgb), .18); border-radius: 50%; transform: translate(-50%, -50%) rotate(-7deg); }
 .learning-orbit::before, .learning-orbit::after { position: absolute; border: 1px solid rgba(var(--accent-rgb), .1); border-radius: inherit; content: ''; }
 .learning-orbit::before { inset: 18%; }
 .learning-orbit::after { inset: 34%; }
 .learning-orbit span { position: absolute; top: 50%; left: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--cta); box-shadow: 0 0 18px rgba(var(--cta-rgb), .9); transform: translate(-50%, -50%); }
 .learning-stack-card { --learning-accent: var(--cta); position: absolute; top: 28px; left: 50%; display: flex; width: min(700px, 72%); min-height: 402px; flex-direction: column; padding: 22px; overflow: hidden; border: 1px solid rgba(var(--accent-rgb), .32); border-radius: 8px; background: rgba(var(--surface-rgb), .96); color: var(--theme-text); text-align: left; cursor: pointer; transform-origin: 50% 90%; transition: transform 380ms cubic-bezier(.22, 1, .36, 1), opacity 220ms ease, filter 220ms ease, border-color 220ms ease; }
+.certification-stack .learning-stack-card { min-height: 570px; }
 .learning-stack-card.accent-cyan { --learning-accent: var(--cyan); }
 .learning-stack-card.accent-blue { --learning-accent: var(--blue); }
 .learning-stack-card.accent-amber { --learning-accent: var(--amber); }
@@ -185,8 +187,8 @@ main, .site-header, footer, .preview-bar, .skip-link { position: relative; z-ind
 .certificate-viewer-actions a { padding: 0 15px; color: var(--cta); font-weight: 700; }
 .certificate-viewer-actions a:hover,
 .certificate-viewer-actions button:hover { border-color: var(--cta); background: rgba(var(--cta-rgb), .12); }
-.certificate-viewer-canvas { display: grid; min-width: 0; min-height: 0; place-items: center; padding: clamp(10px, 2vw, 24px); overflow: auto; }
-.certificate-viewer-canvas img { display: block; width: auto; max-width: 100%; height: auto; max-height: 100%; border-radius: 4px; background: #fff; object-fit: contain; box-shadow: 0 16px 60px rgba(0, 0, 0, .42); }
+.certificate-viewer-canvas { display: grid; min-width: 0; min-height: 0; place-items: center; padding: clamp(10px, 2vw, 24px); overflow: hidden; }
+.certificate-viewer-canvas img { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; border-radius: 4px; background: #fff; object-fit: contain; box-shadow: 0 16px 60px rgba(0, 0, 0, .42); }
 
 .experience-list { display: grid; gap: 18px; }
 .experience-card { padding: clamp(24px, 4vw, 42px); }
@@ -289,7 +291,9 @@ footer { display: flex; width: min(1120px, calc(100% - 48px)); min-height: 110px
   .skills-card { grid-column: auto; }
   .learning-stack { grid-column: auto; padding: 24px 18px; }
   .learning-stack-deck { height: 500px; margin-right: -12px; margin-left: -12px; }
+  .certification-stack .learning-stack-deck { height: 680px; }
   .learning-stack-card { top: 34px; width: calc(100% - 42px); min-height: 420px; padding: 18px; }
+  .certification-stack .learning-stack-card { min-height: 610px; }
   .learning-stack-card.is-previous { transform: translateX(-55%) translateY(-4px) scale(.92) rotate(-3deg); }
   .learning-stack-card.is-next { transform: translateX(-45%) translateY(3px) scale(.95) rotate(3deg); }
   .learning-card-topline { align-items: flex-start; flex-direction: column; }
@@ -316,7 +320,9 @@ footer { display: flex; width: min(1120px, calc(100% - 48px)); min-height: 110px
   .certificate-viewer-actions a { min-width: 46px; padding: 0 10px; font-size: .78rem; }
   .learning-stack-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
   .learning-stack-deck { height: 520px; }
+  .certification-stack .learning-stack-deck { height: 700px; }
   .learning-stack-card { min-height: 440px; }
+  .certification-stack .learning-stack-card { min-height: 630px; }
   .learning-visual { height: 96px; }
   .impact-row div { width: 100%; }
   .project-modal { padding: 10px; }
