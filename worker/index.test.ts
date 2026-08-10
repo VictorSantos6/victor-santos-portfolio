@@ -1,6 +1,6 @@
 import { pbkdf2Sync, randomBytes } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import worker, { validSession, validatePortfolio, verifyPassword } from './index.js'
+import worker, { normalizePortfolio, validImageSignature, validSession, validatePortfolio, verifyPassword } from './index.js'
 import portfolio from '../src/data/portfolio.json'
 
 function authEnvironment(password = 'a-long-test-password') {
@@ -35,6 +35,14 @@ describe('portfolio worker security helpers', () => {
     const unsafe = structuredClone(portfolio)
     unsafe.contact.intro = '<b>unsafe</b>'
     expect(validatePortfolio(unsafe)).toHaveProperty('contact.intro', 'HTML is not allowed.')
+  })
+
+  it('upgrades legacy snapshots and validates uploaded image signatures', () => {
+    const legacy = structuredClone(portfolio) as typeof portfolio & { certifications?: typeof portfolio.certifications }
+    delete legacy.certifications
+    expect(normalizePortfolio(legacy).certifications).toEqual(portfolio.certifications)
+    expect(validImageSignature(new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 69, 66, 80]), 'image/webp')).toBe(true)
+    expect(validImageSignature(new Uint8Array([82, 73, 70, 70]), 'image/webp')).toBe(false)
   })
 
   it('verifies only the configured PBKDF2 password', async () => {

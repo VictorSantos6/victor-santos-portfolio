@@ -43,6 +43,29 @@ export function validatePortfolio(value: unknown): ValidationErrors {
     requireList(errors, 'education.coursework', education.coursework, 30).forEach((item, index) => requireText(errors, `education.coursework.${index}`, item, 180))
   }
 
+  const certifications = requireList(errors, 'certifications', value.certifications, 30)
+  const certificationIds = new Set<string>()
+  certifications.forEach((item, index) => {
+    const base = `certifications.${index}`
+    if (!isRecord(item)) return void (errors[base] = 'Certification is invalid.')
+    for (const key of ['id', 'name', 'issuer', 'issued', 'detail', 'credentialId', 'verificationUrl', 'imageName']) {
+      requireText(errors, `${base}.${key}`, item[key], key === 'verificationUrl' ? 500 : 240)
+    }
+    if (typeof item.id === 'string') {
+      if (!slugPattern.test(item.id)) errors[`${base}.id`] = 'Use lowercase letters, numbers, and hyphens.'
+      if (certificationIds.has(item.id)) errors[`${base}.id`] = 'Each certification ID must be unique.'
+      certificationIds.add(item.id)
+    }
+    if (typeof item.verificationUrl === 'string') {
+      try {
+        if (new URL(item.verificationUrl).protocol !== 'https:') throw new Error()
+      } catch {
+        errors[`${base}.verificationUrl`] = 'Use a valid HTTPS URL.'
+      }
+    }
+    if (item.imageKey !== null && typeof item.imageKey !== 'string') errors[`${base}.imageKey`] = 'Certificate image reference is invalid.'
+  })
+
   requireText(errors, 'experienceIntro', value.experienceIntro, 1000)
   const experiences = requireList(errors, 'experiences', value.experiences, 30)
   const experienceIds = new Set<string>()

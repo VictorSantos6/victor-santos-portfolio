@@ -97,6 +97,9 @@ describe('portfolio experience', () => {
     expect(screen.getByRole('link', { name: 'Intro' })).toHaveAttribute('aria-current', 'location')
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-planet', 'exoplanet')
     expect(document.querySelector('.css-space-fallback')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Responsible Conduct of Research for Engineers' })).toBeInTheDocument()
+    expect(screen.getByText('74865898')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Verify credential' })).toHaveAttribute('href', defaultPortfolio.certifications[0].verificationUrl)
   })
 
   it('makes project evidence readable before the dialog opens', () => {

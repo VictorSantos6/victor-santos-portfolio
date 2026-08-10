@@ -25,6 +25,19 @@
       "Analysis and Design of Algorithms"
     ]
   },
+  "certifications": [
+    {
+      "id": "responsible-conduct-research-engineers",
+      "name": "Responsible Conduct of Research for Engineers",
+      "issuer": "CITI Program",
+      "issued": "February 1, 2026",
+      "detail": "Stage 1 · University of Puerto Rico Mayagüez (UPRM)",
+      "credentialId": "74865898",
+      "verificationUrl": "https://www.citiprogram.org/verify/?wfb022f7c-0619-4132-b691-a9551db6cc47-74865898",
+      "imageKey": null,
+      "imageName": "Victor_Santos_CITI_Responsible_Conduct_of_Research.webp"
+    }
+  ],
   "skillGroups": [
     { "label": "Languages", "skills": ["Dart", "Java", "C++", "Python", "JavaScript"] },
     { "label": "Frameworks", "skills": ["Flutter", "React", "Firebase", "Figma"] },

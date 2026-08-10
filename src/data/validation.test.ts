@@ -28,4 +28,20 @@ describe('portfolio content validation', () => {
       'projects.0.accent': 'Choose an available accent.',
     })
   })
+
+  it('seeds only the CITI certification and validates certification IDs and links', () => {
+    expect(defaultPortfolio.certifications).toHaveLength(1)
+    expect(defaultPortfolio.certifications[0]).toMatchObject({
+      name: 'Responsible Conduct of Research for Engineers',
+      issuer: 'CITI Program',
+      credentialId: '74865898',
+    })
+    const content = structuredClone(defaultPortfolio)
+    content.certifications.push({ ...content.certifications[0], verificationUrl: 'http://example.com/verify' })
+
+    expect(validatePortfolio(content)).toMatchObject({
+      'certifications.1.id': 'Each certification ID must be unique.',
+      'certifications.1.verificationUrl': 'Use a valid HTTPS URL.',
+    })
+  })
 })

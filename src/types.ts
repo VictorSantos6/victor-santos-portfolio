@@ -40,6 +40,18 @@ export interface SkillGroup {
   skills: string[]
 }
 
+export interface Certification {
+  id: string
+  name: string
+  issuer: string
+  issued: string
+  detail: string
+  credentialId: string
+  verificationUrl: string
+  imageKey: string | null
+  imageName: string
+}
+
 export interface Contact {
   email: string
   linkedin: string
@@ -65,6 +77,7 @@ export interface Identity {
 export interface PortfolioContent {
   identity: Identity
   education: Education
+  certifications: Certification[]
   skillGroups: SkillGroup[]
   experienceIntro: string
   experiences: Experience[]

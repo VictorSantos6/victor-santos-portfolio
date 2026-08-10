@@ -1,6 +1,7 @@
 import {
   ArrowDown,
   ArrowRight,
+  Award,
   BookOpen,
   ContactRound,
   Download,
@@ -66,7 +67,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
   const lastTrigger = useRef<HTMLButtonElement | null>(null)
   const lastBrandActivation = useRef(0)
   const activeTheme = sectionThemes[activeSection]
-  const { contact, education, experiences, projects, skillGroups } = portfolio
+  const { certifications, contact, education, experiences, projects, skillGroups } = portfolio
   const learningStack: LearningStackItem[] = [
     {
       id: 'degree-progress',
@@ -336,6 +337,27 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
             <article className="content-card course-card reveal"><p className="card-label">Relevant coursework</p><ul>{education.coursework.map((course) => <li key={course}>{course}</li>)}</ul></article>
             <article className="content-card skills-card reveal"><p className="card-label">Tools and skills</p>{skillGroups.map((group) => <div className="skill-group" key={group.label}><h3>{group.label}</h3><p>{group.skills.join(' · ')}</p></div>)}</article>
             <LearningStack items={learningStack} reducedMotion={reducedMotion} />
+            {certifications.length > 0 && (
+              <div className="certifications-block reveal">
+                <div className="certifications-heading"><div><p className="card-label">Certifications</p><h3>Verified learning milestones.</h3></div><Award aria-hidden="true" /></div>
+                <div className="certification-grid">
+                  {certifications.map((certification) => (
+                    <article className="certification-card" key={certification.id}>
+                      <a className="certification-image-link" href={`/certifications/${certification.id}/image`} target="_blank" rel="noreferrer" aria-label={`View ${certification.name} certificate image`}>
+                        <img src={`/certifications/${certification.id}/image`} alt={`${certification.name} certificate issued by ${certification.issuer}`} loading="lazy" />
+                      </a>
+                      <div className="certification-copy">
+                        <p className="card-label">{certification.issuer}</p>
+                        <h4>{certification.name}</h4>
+                        <p>{certification.detail}</p>
+                        <dl><div><dt>Issued</dt><dd>{certification.issued}</dd></div><div><dt>Credential ID</dt><dd>{certification.credentialId}</dd></div></dl>
+                        <a className="certification-verify" href={certification.verificationUrl} target="_blank" rel="noreferrer">Verify credential <ExternalLink size={15} aria-hidden="true" /></a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

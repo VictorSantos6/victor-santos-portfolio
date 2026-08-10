@@ -15,14 +15,15 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import App from '../App'
 import { defaultPortfolio } from '../data/portfolio'
 import { validatePortfolio, type ValidationErrors } from '../data/validation'
-import type { Experience, PortfolioContent, PortfolioRevision, Project, SkillGroup } from '../types'
+import type { Certification, Experience, PortfolioContent, PortfolioRevision, Project, SkillGroup } from '../types'
 import './AdminApp.css'
 
-type Section = 'general' | 'education' | 'skills' | 'experience' | 'projects' | 'contact'
+type Section = 'general' | 'education' | 'certifications' | 'skills' | 'experience' | 'projects' | 'contact'
 
 const sections: Array<{ id: Section; label: string }> = [
   { id: 'general', label: 'General' },
   { id: 'education', label: 'Education' },
+  { id: 'certifications', label: 'Certifications' },
   { id: 'skills', label: 'Skills' },
   { id: 'experience', label: 'Experience' },
   { id: 'projects', label: 'Projects' },
@@ -331,6 +332,28 @@ export default function AdminApp() {
     }
   }
 
+  const uploadCertificationImage = async (certificationId: string, file?: File) => {
+    if (!file) return
+    if (dirty && !await save()) return
+    setBusy(true)
+    setProblem('')
+    try {
+      const result = await api<{ revision: PortfolioRevision }>(`/api/admin/certification-image?id=${encodeURIComponent(certificationId)}`, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type, 'X-File-Name': file.name },
+      })
+      setRevision(result.revision)
+      setDraft(clone(result.revision.content))
+      setBaseline(clone(result.revision.content))
+      setNotice('Certificate image uploaded to the draft. Publish when you are ready.')
+    } catch (reason) {
+      setProblem(reason instanceof Error ? reason.message : 'Unable to upload the certificate image.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (!draft) {
     return <main className="admin-loading"><p>{problem || 'Loading the editor…'}</p>{problem && <button className="secondary-button" type="button" onClick={loadDraft}>Try again</button>}</main>
   }
@@ -340,6 +363,9 @@ export default function AdminApp() {
   }))
   const addProject = () => update((content) => content.projects.push({
     id: slug(`project-${content.projects.length + 1}`), name: 'New project', period: 'Dates', stack: ['Technology'], signal: `${String(content.projects.length + 1).padStart(2, '0')} / PROJECT`, problem: 'Describe the problem.', contribution: 'Describe what you built.', outcomes: ['Add an outcome.'], accent: 'cyan',
+  }))
+  const addCertification = () => update((content) => content.certifications.push({
+    id: slug(`certification-${content.certifications.length + 1}`), name: 'New certification', issuer: 'Issuing organization', issued: 'Issue date', detail: 'Certification details', credentialId: 'Credential ID', verificationUrl: 'https://example.com/verify', imageKey: null, imageName: 'certificate.webp',
   }))
 
   return (
@@ -407,6 +433,33 @@ export default function AdminApp() {
                   <TextList label="Skills" values={group.skills} onChange={(values) => update((content) => { content.skillGroups[index].skills = values })} errors={errors} path={`skillGroups.${index}.skills`} addLabel="Add skill" />
                 </article>
               ))}
+            </div>
+          </section>
+        )}
+
+        {activeSection === 'certifications' && (
+          <section className="editor-panel" aria-labelledby="certifications-editor-title">
+            <div className="panel-heading"><div><h2 id="certifications-editor-title">Certifications</h2><p>Add, edit, reorder, and attach verification details for completed certifications.</p></div><button className="secondary-button compact" type="button" onClick={addCertification}><Plus size={16} /> Add certification</button></div>
+            <div className="editor-stack">
+              {draft.certifications.map((certification: Certification, index) => (
+                <article className="editor-card" key={`${certification.id}-${index}`}>
+                  <div className="card-toolbar"><div><span className="card-index">{String(index + 1).padStart(2, '0')}</span><h3>{certification.name}</h3></div><ListActions index={index} length={draft.certifications.length} onMove={(from, to) => update((content) => { content.certifications = move(content.certifications, from, to) })} onRemove={() => window.confirm('Delete this certification from the draft?') && update((content) => { content.certifications.splice(index, 1) })} name={certification.name} /></div>
+                  <div className="certificate-admin-preview">
+                    {(certification.imageKey || certification.id === 'responsible-conduct-research-engineers') && <img src={`/api/admin/certification-image?id=${encodeURIComponent(certification.id)}&revision=${revision?.updatedAt ?? ''}`} alt={`${certification.name} certificate preview`} />}
+                    <div><p className="admin-eyebrow">Certificate image</p><strong>{certification.imageName}</strong><small>WEBP, PNG, or JPEG · 10 MB maximum</small><label className={`secondary-button compact ${busy ? 'disabled' : ''}`}><FileUp size={16} /> Replace image<input type="file" accept="image/webp,image/png,image/jpeg,.webp,.png,.jpg,.jpeg" disabled={busy} onChange={(event) => uploadCertificationImage(certification.id, event.target.files?.[0])} /></label></div>
+                  </div>
+                  <div className="field-grid two-column">
+                    <Field label="ID / URL slug" value={certification.id} onChange={(value) => update((content) => { content.certifications[index].id = value })} error={errors[`certifications.${index}.id`]} />
+                    <Field label="Name" value={certification.name} onChange={(value) => update((content) => { content.certifications[index].name = value })} error={errors[`certifications.${index}.name`]} />
+                    <Field label="Issuer" value={certification.issuer} onChange={(value) => update((content) => { content.certifications[index].issuer = value })} error={errors[`certifications.${index}.issuer`]} />
+                    <Field label="Issued" value={certification.issued} onChange={(value) => update((content) => { content.certifications[index].issued = value })} error={errors[`certifications.${index}.issued`]} />
+                    <Field label="Credential ID" value={certification.credentialId} onChange={(value) => update((content) => { content.certifications[index].credentialId = value })} error={errors[`certifications.${index}.credentialId`]} />
+                    <Field label="Verification URL" type="url" value={certification.verificationUrl} onChange={(value) => update((content) => { content.certifications[index].verificationUrl = value })} error={errors[`certifications.${index}.verificationUrl`]} />
+                  </div>
+                  <Field label="Details" value={certification.detail} onChange={(value) => update((content) => { content.certifications[index].detail = value })} error={errors[`certifications.${index}.detail`]} multiline />
+                </article>
+              ))}
+              {!draft.certifications.length && <p className="empty-editor-state">No certifications in this draft.</p>}
             </div>
           </section>
         )}

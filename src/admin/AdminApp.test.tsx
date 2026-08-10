@@ -57,4 +57,19 @@ describe('portfolio admin editor', () => {
     expect(screen.getByDisplayValue('New project')).toBeInTheDocument()
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
   })
+
+  it('exposes the seeded certification for editing and can add another draft item', async () => {
+    const revision: PortfolioRevision = { id: 2, content: structuredClone(defaultPortfolio), updatedAt: '2026-08-04T12:00:00.000Z', publishedAt: null }
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((input: string | URL | Request) => response(String(input).endsWith('/session') ? { authenticated: true } : { revision })))
+    const user = userEvent.setup()
+
+    render(<AdminApp />)
+    await screen.findByRole('heading', { name: 'General' })
+    await user.click(screen.getByRole('button', { name: 'Certifications' }))
+
+    expect(screen.getByDisplayValue('Responsible Conduct of Research for Engineers')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('74865898')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add certification' }))
+    expect(screen.getByDisplayValue('New certification')).toBeInTheDocument()
+  })
 })

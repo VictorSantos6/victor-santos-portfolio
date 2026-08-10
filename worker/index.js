@@ -1,5 +1,16 @@
 const files = new Map(/*__ASSET_ENTRIES__*/[])
 const defaultPortfolio = /*__DEFAULT_PORTFOLIO__*/{}
+const bundledCertifications = [{
+  id: 'responsible-conduct-research-engineers',
+  name: 'Responsible Conduct of Research for Engineers',
+  issuer: 'CITI Program',
+  issued: 'February 1, 2026',
+  detail: 'Stage 1 · University of Puerto Rico Mayagüez (UPRM)',
+  credentialId: '74865898',
+  verificationUrl: 'https://www.citiprogram.org/verify/?wfb022f7c-0619-4132-b691-a9551db6cc47-74865898',
+  imageKey: null,
+  imageName: 'Victor_Santos_CITI_Responsible_Conduct_of_Research.webp',
+}]
 
 const SESSION_COOKIE = '__Host-portfolio-admin'
 const SESSION_TTL_SECONDS = 12 * 60 * 60
@@ -7,6 +18,7 @@ const LOGIN_WINDOW_SECONDS = 15 * 60
 const LOGIN_LOCK_SECONDS = 30 * 60
 const LOGIN_MAX_FAILURES = 5
 const MAX_RESUME_BYTES = 10 * 1024 * 1024
+const MAX_CERTIFICATE_IMAGE_BYTES = 10 * 1024 * 1024
 const PBKDF2_ITERATIONS = 100000
 const encoder = new TextEncoder()
 
@@ -124,6 +136,23 @@ function validatePortfolio(value) {
     for (const key of ['institution', 'location', 'degree', 'graduation', 'gpa']) required(`education.${key}`, value.education[key], 240)
     list('education.coursework', value.education.coursework, 30).forEach((entry, index) => required(`education.coursework.${index}`, entry, 180))
   }
+  const certificationIds = new Set()
+  list('certifications', value.certifications, 30).forEach((item, index) => {
+    const path = `certifications.${index}`
+    if (!isRecord(item)) return void (errors[path] = 'Certification is invalid.')
+    for (const key of ['id', 'name', 'issuer', 'issued', 'detail', 'credentialId', 'verificationUrl', 'imageName']) required(`${path}.${key}`, item[key], key === 'verificationUrl' ? 500 : 240)
+    if (typeof item.id === 'string') {
+      if (!slugPattern.test(item.id)) errors[`${path}.id`] = 'Use lowercase letters, numbers, and hyphens.'
+      if (certificationIds.has(item.id)) errors[`${path}.id`] = 'Each certification ID must be unique.'
+      certificationIds.add(item.id)
+    }
+    try {
+      if (new URL(item.verificationUrl).protocol !== 'https:') throw new Error()
+    } catch {
+      errors[`${path}.verificationUrl`] = 'Use a valid HTTPS URL.'
+    }
+    if (item.imageKey !== null && typeof item.imageKey !== 'string') errors[`${path}.imageKey`] = 'Certificate image reference is invalid.'
+  })
   required('experienceIntro', value.experienceIntro, 1000)
   const experienceIds = new Set()
   list('experiences', value.experiences, 30).forEach((item, index) => {
@@ -182,13 +211,26 @@ function validatePortfolio(value) {
   return errors
 }
 
+function normalizePortfolio(content) {
+  if (Array.isArray(content.certifications)) return content
+  return { ...content, certifications: structuredClone(defaultPortfolio.certifications || bundledCertifications) }
+}
+
 function parseRevision(row) {
   return {
     id: row.id,
-    content: JSON.parse(row.content_json),
+    content: normalizePortfolio(JSON.parse(row.content_json)),
     updatedAt: row.updated_at,
     publishedAt: row.published_at,
   }
+}
+
+async function normalizeRevision(db, row) {
+  const content = JSON.parse(row.content_json)
+  if (Array.isArray(content.certifications)) return row
+  const normalizedJson = JSON.stringify(normalizePortfolio(content))
+  await db.prepare('UPDATE portfolio_revisions SET content_json = ? WHERE id = ?').bind(normalizedJson, row.id).run()
+  return { ...row, content_json: normalizedJson }
 }
 
 async function seedPublished(db) {
@@ -201,19 +243,20 @@ async function seedPublished(db) {
 
 async function publishedRevision(db) {
   await seedPublished(db)
-  return db.prepare("SELECT * FROM portfolio_revisions WHERE status = 'published' ORDER BY published_at DESC, id DESC LIMIT 1").first()
+  const row = await db.prepare("SELECT * FROM portfolio_revisions WHERE status = 'published' ORDER BY published_at DESC, id DESC LIMIT 1").first()
+  return normalizeRevision(db, row)
 }
 
 async function draftRevision(db) {
   await seedPublished(db)
   let row = await db.prepare("SELECT * FROM portfolio_revisions WHERE status = 'draft' LIMIT 1").first()
-  if (row) return row
+  if (row) return normalizeRevision(db, row)
   const published = await publishedRevision(db)
   const now = new Date().toISOString()
   await db.prepare("INSERT INTO portfolio_revisions (status, content_json, created_at, updated_at, published_at) VALUES ('draft', ?, ?, ?, NULL)")
     .bind(published.content_json, now, now).run()
   row = await db.prepare("SELECT * FROM portfolio_revisions WHERE status = 'draft' LIMIT 1").first()
-  return row
+  return normalizeRevision(db, row)
 }
 
 async function requireAdmin(request, env) {
@@ -250,7 +293,7 @@ async function handleApi(request, env, pathname) {
     if (!env.DB) return json(defaultPortfolio)
     try {
       const row = await publishedRevision(env.DB)
-      return json(JSON.parse(row.content_json))
+      return json(normalizePortfolio(JSON.parse(row.content_json)))
     } catch {
       return json(defaultPortfolio)
     }
@@ -355,6 +398,47 @@ async function handleApi(request, env, pathname) {
     return json({ revision: parseRevision(row) })
   }
 
+  if (pathname === '/api/admin/certification-image' && request.method === 'GET') {
+    const certificationId = new URL(request.url).searchParams.get('id') || ''
+    const row = await draftRevision(env.DB)
+    const content = normalizePortfolio(JSON.parse(row.content_json))
+    const certification = content.certifications.find((item) => item.id === certificationId)
+    if (!certification) return json({ error: 'Certification not found.' }, 404)
+    if (certification.imageKey && env.R2) {
+      const object = await env.R2.get(certification.imageKey)
+      if (object) return certificateImageResponse(object, request.method)
+    }
+    return serveAsset(`/certifications/${certification.id}.webp`, request.method) || new Response(null, { status: 404 })
+  }
+
+  if (pathname === '/api/admin/certification-image' && request.method === 'PUT') {
+    if (!env.R2) return json({ error: 'Certificate image storage is unavailable.' }, 503)
+    const certificationId = new URL(request.url).searchParams.get('id') || ''
+    const current = await draftRevision(env.DB)
+    const content = normalizePortfolio(JSON.parse(current.content_json))
+    const certification = content.certifications.find((item) => item.id === certificationId)
+    if (!certification) return json({ error: 'Save this certification before uploading its image.' }, 404)
+    const contentType = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase()
+    if (!['image/webp', 'image/png', 'image/jpeg'].includes(contentType)) return json({ error: 'Choose a WEBP, PNG, or JPEG image.' }, 415)
+    const declaredLength = Number(request.headers.get('Content-Length') || 0)
+    if (declaredLength > MAX_CERTIFICATE_IMAGE_BYTES) return json({ error: 'The image must be 10 MB or smaller.' }, 413)
+    const bytes = new Uint8Array(await request.arrayBuffer())
+    if (!bytes.length || bytes.length > MAX_CERTIFICATE_IMAGE_BYTES) return json({ error: 'The image must be between 1 byte and 10 MB.' }, 413)
+    if (!validImageSignature(bytes, contentType)) return json({ error: 'The file signature does not match the selected image type.' }, 415)
+    const extension = contentType === 'image/png' ? 'png' : contentType === 'image/jpeg' ? 'jpg' : 'webp'
+    const requestedName = decodeURIComponent(request.headers.get('X-File-Name') || `certificate.${extension}`).replace(/[^a-zA-Z0-9._ -]/g, '').slice(0, 180)
+    const fileName = requestedName || `certificate.${extension}`
+    const key = `certifications/${crypto.randomUUID()}.${extension}`
+    await env.R2.put(key, bytes, { httpMetadata: { contentType } })
+    certification.imageKey = key
+    certification.imageName = fileName
+    const now = new Date().toISOString()
+    await env.DB.prepare("UPDATE portfolio_revisions SET content_json = ?, updated_at = ? WHERE id = ? AND status = 'draft'")
+      .bind(JSON.stringify(content), now, current.id).run()
+    const row = await env.DB.prepare('SELECT * FROM portfolio_revisions WHERE id = ?').bind(current.id).first()
+    return json({ revision: parseRevision(row) })
+  }
+
   return json({ error: 'Not found.' }, 404)
 }
 
@@ -398,13 +482,49 @@ async function serveResume(env, method) {
   return serveAsset('/Victor-Santos-Resume.pdf', method) || new Response(null, { status: 404 })
 }
 
-export { validatePortfolio, verifyPassword, validSession }
+function validImageSignature(bytes, contentType) {
+  if (contentType === 'image/png') return bytes.length >= 8 && [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte)
+  if (contentType === 'image/jpeg') return bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255
+  return bytes.length >= 12 && new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' && new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP'
+}
+
+function certificateImageResponse(object, method) {
+  const headers = new Headers({
+    'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+  })
+  return new Response(method === 'HEAD' ? null : object.body, { headers })
+}
+
+async function serveCertificateImage(env, certificationId, method) {
+  if (env.DB) {
+    try {
+      const row = await publishedRevision(env.DB)
+      const content = normalizePortfolio(JSON.parse(row.content_json))
+      const certification = content.certifications.find((item) => item.id === certificationId)
+      if (!certification) return new Response(null, { status: 404 })
+      if (certification.imageKey && env.R2) {
+        const object = await env.R2.get(certification.imageKey)
+        if (object) return certificateImageResponse(object, method)
+      }
+      return serveAsset(`/certifications/${certification.id}.webp`, method) || new Response(null, { status: 404 })
+    } catch {
+      // Use the bundled image while storage is unavailable.
+    }
+  }
+  return serveAsset(`/certifications/${certificationId}.webp`, method) || new Response(null, { status: 404 })
+}
+
+export { normalizePortfolio, validatePortfolio, validImageSignature, verifyPassword, validSession }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     if (url.pathname.startsWith('/api/')) return handleApi(request, env, url.pathname)
     if (url.pathname === '/resume') return serveResume(env, request.method)
+    const certificateMatch = url.pathname.match(/^\/certifications\/([a-z0-9]+(?:-[a-z0-9]+)*)\/image$/)
+    if (certificateMatch) return serveCertificateImage(env, certificateMatch[1], request.method)
     const pathname = url.pathname === '/' ? '/index.html' : url.pathname
     const asset = serveAsset(pathname, request.method)
     if (asset) return asset
