@@ -110,6 +110,18 @@ describe('portfolio experience', () => {
     expect(document.querySelector('.mission-rail')).not.toBeInTheDocument()
   })
 
+  it('shows verified learning milestones in an interactive stack', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'Knowledge in active orbit.' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /computer science & engineering, degree in progress/i })).toHaveAttribute('aria-current', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Next learning card' }))
+
+    expect(screen.getByRole('button', { name: /autonomous systems research, active mission/i })).toHaveAttribute('aria-current', 'true')
+  })
+
   it('opens project cases through a deep-linkable dialog and closes with Escape', async () => {
     const user = userEvent.setup()
     render(<App />)

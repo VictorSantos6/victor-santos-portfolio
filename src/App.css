@@ -133,6 +133,43 @@ main, .site-header, footer, .preview-bar, .skip-link { position: relative; z-ind
 .skill-group h3 { margin: 0 0 8px; font-size: .88rem; }
 .skill-group p { margin: 0; color: var(--theme-muted); font-size: .88rem; line-height: 1.65; }
 
+.learning-stack { grid-column: 1 / -1; padding: clamp(24px, 4vw, 42px); overflow: hidden; border: 1px solid rgba(var(--accent-rgb), .26); border-radius: 10px; background: rgba(var(--surface-rgb), .66); box-shadow: 0 22px 70px rgba(0, 0, 0, .18); backdrop-filter: blur(8px); }
+.learning-stack-heading { position: relative; z-index: 8; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.learning-stack-heading h3 { margin: 10px 0 0; font-size: clamp(1.8rem, 4vw, 3.4rem); line-height: 1.02; }
+.learning-stack-heading > p { margin: 0; color: var(--theme-muted); font: 600 .78rem/1 var(--font-name); }
+.learning-stack-heading > p span { color: var(--cta); font-size: 1.25rem; }
+.learning-stack-deck { position: relative; height: 480px; margin: 20px -22px 0; perspective: 1200px; }
+.learning-orbit { position: absolute; top: 52%; left: 50%; width: min(780px, 92%); aspect-ratio: 2.7; border: 1px solid rgba(var(--accent-rgb), .18); border-radius: 50%; transform: translate(-50%, -50%) rotate(-7deg); }
+.learning-orbit::before, .learning-orbit::after { position: absolute; border: 1px solid rgba(var(--accent-rgb), .1); border-radius: inherit; content: ''; }
+.learning-orbit::before { inset: 18%; }
+.learning-orbit::after { inset: 34%; }
+.learning-orbit span { position: absolute; top: 50%; left: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--cta); box-shadow: 0 0 18px rgba(var(--cta-rgb), .9); transform: translate(-50%, -50%); }
+.learning-stack-card { --learning-accent: var(--cta); position: absolute; top: 28px; left: 50%; display: flex; width: min(700px, 72%); min-height: 402px; flex-direction: column; padding: 22px; overflow: hidden; border: 1px solid rgba(var(--accent-rgb), .32); border-radius: 8px; background: rgba(var(--surface-rgb), .96); color: var(--theme-text); text-align: left; cursor: pointer; transform-origin: 50% 90%; transition: transform 380ms cubic-bezier(.22, 1, .36, 1), opacity 220ms ease, filter 220ms ease, border-color 220ms ease; }
+.learning-stack-card.accent-cyan { --learning-accent: var(--cyan); }
+.learning-stack-card.accent-blue { --learning-accent: var(--blue); }
+.learning-stack-card.accent-amber { --learning-accent: var(--amber); }
+.learning-stack-card.is-active { z-index: 4; opacity: 1; border-color: color-mix(in srgb, var(--learning-accent) 56%, transparent); transform: translateX(-50%) translateY(18px) scale(1) rotate(0); }
+.learning-stack-card.is-previous { z-index: 2; opacity: .58; filter: saturate(.72); transform: translateX(-64%) translateY(-4px) scale(.9) rotate(-5deg); }
+.learning-stack-card.is-next { z-index: 3; opacity: .72; filter: saturate(.78); transform: translateX(-36%) translateY(3px) scale(.93) rotate(5deg); }
+.learning-stack-card.is-hidden { z-index: 1; opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(-10px) scale(.84); }
+.learning-stack-card:hover, .learning-stack-card:focus-visible { border-color: var(--learning-accent); }
+.learning-card-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--theme-muted); font-size: .72rem; font-weight: 600; text-transform: uppercase; }
+.learning-status { display: inline-flex; align-items: center; gap: 7px; color: var(--learning-accent); }
+.learning-visual { position: relative; display: block; height: 116px; margin: 20px 0; overflow: hidden; border: 1px solid rgba(var(--accent-rgb), .15); border-radius: 6px; background: rgba(var(--space-rgb), .36); }
+.learning-visual::before { position: absolute; inset: 0; content: ''; background-image: radial-gradient(circle, rgba(var(--accent-rgb), .72) 0 1px, transparent 1.5px); background-size: 34px 34px; opacity: .28; }
+.learning-planet { position: absolute; top: 23px; left: 10%; width: 70px; height: 70px; border: 1px solid var(--learning-accent); border-radius: 50%; background: radial-gradient(circle at 34% 28%, rgba(var(--accent-rgb), .45), rgba(var(--space-rgb), .52) 62%); box-shadow: inset -12px -10px 24px rgba(0, 0, 0, .28), 0 0 24px color-mix(in srgb, var(--learning-accent) 28%, transparent); }
+.learning-flight-path { position: absolute; top: 26px; right: 7%; width: 62%; height: 70px; border-top: 1px solid var(--learning-accent); border-radius: 50%; opacity: .58; transform: rotate(-7deg); }
+.learning-flight-path::after { position: absolute; top: -4px; right: 0; width: 7px; height: 7px; border-radius: 50%; content: ''; background: var(--learning-accent); box-shadow: 0 0 14px var(--learning-accent); }
+.learning-card-number { position: absolute; right: 14px; bottom: 4px; color: rgba(var(--accent-rgb), .16); font: 700 4.8rem/1 var(--font-name); }
+.learning-kind { color: var(--learning-accent); font-size: .72rem; font-weight: 700; text-transform: uppercase; }
+.learning-stack-card > strong { margin-top: 7px; font: 600 clamp(1.45rem, 3vw, 2.2rem)/1.08 var(--font-heading); }
+.learning-description { max-width: 620px; margin-top: 10px; color: var(--theme-muted); font-size: .9rem; line-height: 1.55; }
+.learning-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: auto; padding-top: 18px; }
+.learning-tags span { padding: 6px 9px; border: 1px solid rgba(var(--accent-rgb), .18); border-radius: 999px; background: rgba(var(--accent-rgb), .06); color: var(--theme-text); font-size: .7rem; }
+.learning-stack-controls { position: relative; z-index: 8; display: flex; justify-content: center; gap: 10px; margin-top: -2px; }
+.learning-stack-controls button { display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid rgba(var(--accent-rgb), .35); border-radius: 50%; background: rgba(var(--space-rgb), .55); color: var(--theme-text); cursor: pointer; transition: border-color 200ms ease, background 200ms ease, color 200ms ease, transform 200ms ease; }
+.learning-stack-controls button:hover { border-color: var(--cta); background: rgba(var(--cta-rgb), .14); color: var(--cta); transform: translateY(-2px); }
+
 .experience-list { display: grid; gap: 18px; }
 .experience-card { padding: clamp(24px, 4vw, 42px); }
 .experience-card.featured { border-color: rgba(var(--cta-rgb), .5); }
@@ -232,6 +269,12 @@ footer { display: flex; width: min(1120px, calc(100% - 48px)); min-height: 110px
   .section-heading--right .section-deck { margin-left: 0; }
   .profile-grid, .project-grid, .dialog-grid { grid-template-columns: 1fr; }
   .skills-card { grid-column: auto; }
+  .learning-stack { grid-column: auto; padding: 24px 18px; }
+  .learning-stack-deck { height: 500px; margin-right: -12px; margin-left: -12px; }
+  .learning-stack-card { top: 34px; width: calc(100% - 42px); min-height: 420px; padding: 18px; }
+  .learning-stack-card.is-previous { transform: translateX(-55%) translateY(-4px) scale(.92) rotate(-3deg); }
+  .learning-stack-card.is-next { transform: translateX(-45%) translateY(3px) scale(.95) rotate(3deg); }
+  .learning-card-topline { align-items: flex-start; flex-direction: column; }
   .experience-header { display: grid; }
   .experience-body { grid-template-columns: 1fr; }
   .experience-body > div:last-child { grid-column: auto; }
@@ -248,6 +291,10 @@ footer { display: flex; width: min(1120px, calc(100% - 48px)); min-height: 110px
   .hero-actions, .contact-actions { align-items: stretch; flex-direction: column; }
   .primary-button, .text-link, .contact-link { width: 100%; }
   .skills-card { grid-template-columns: 1fr; }
+  .learning-stack-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .learning-stack-deck { height: 520px; }
+  .learning-stack-card { min-height: 440px; }
+  .learning-visual { height: 96px; }
   .impact-row div { width: 100%; }
   .project-modal { padding: 10px; }
   .project-dialog { max-height: calc(100vh - 20px); }
@@ -257,4 +304,6 @@ footer { display: flex; width: min(1120px, calc(100% - 48px)); min-height: 110px
   .scene-loader span, .project-modal, .project-dialog, .orbit-signal::after { animation: none; }
   .orbit-signal::after { opacity: .72; offset-distance: 68%; }
   .project-card, .primary-button { transition: none; }
+  .learning-stack-card, .learning-stack-controls button { transition: none; }
+  .learning-stack-controls button:hover { transform: none; }
 }

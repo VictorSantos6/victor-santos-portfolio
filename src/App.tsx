@@ -12,6 +12,7 @@ import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useSta
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './App.css'
+import { LearningStack, type LearningStackItem } from './components/LearningStack'
 import { ProjectDialog } from './components/ProjectDialog'
 import { defaultPortfolio } from './data/portfolio'
 import { useReducedMotion } from './hooks/useReducedMotion'
@@ -66,6 +67,41 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
   const lastBrandActivation = useRef(0)
   const activeTheme = sectionThemes[activeSection]
   const { contact, education, experiences, projects, skillGroups } = portfolio
+  const learningStack: LearningStackItem[] = [
+    {
+      id: 'degree-progress',
+      status: 'Degree in progress',
+      kind: 'Education',
+      title: 'Computer Science & Engineering',
+      organization: education.institution,
+      period: `Class of ${education.graduation}`,
+      description: `${education.degree}, supported by coursework in data structures, software engineering, and algorithms.`,
+      tags: ['Algorithms', 'Software Engineering', 'Data Structures'],
+      accent: 'cyan',
+    },
+    {
+      id: 'autonomous-systems',
+      status: 'Active mission',
+      kind: 'Research',
+      title: 'Autonomous Systems Research',
+      organization: 'LiDRON',
+      period: 'May 2026 - Present',
+      description: 'Applied learning through a real-time LiDAR perception pipeline for autonomous drone landing research.',
+      tags: ['Python', 'LiDAR', 'Docker'],
+      accent: 'blue',
+    },
+    {
+      id: 'flutter-development',
+      status: 'Applied learning',
+      kind: 'Product development',
+      title: 'Flutter Application Architecture',
+      organization: 'MiUni',
+      period: 'Jul 2025 - Present',
+      description: 'Building production features with Flutter, Clean Architecture, and Cubit state management.',
+      tags: ['Flutter', 'Clean Architecture', 'Cubit'],
+      accent: 'amber',
+    },
+  ]
 
   useEffect(() => {
     if (!loadPublished || typeof fetch !== 'function') return
@@ -299,6 +335,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
             <article className="content-card gpa-card reveal"><p className="card-label">Current GPA</p><strong>{education.gpa}</strong></article>
             <article className="content-card course-card reveal"><p className="card-label">Relevant coursework</p><ul>{education.coursework.map((course) => <li key={course}>{course}</li>)}</ul></article>
             <article className="content-card skills-card reveal"><p className="card-label">Tools and skills</p>{skillGroups.map((group) => <div className="skill-group" key={group.label}><h3>{group.label}</h3><p>{group.skills.join(' · ')}</p></div>)}</article>
+            <LearningStack items={learningStack} reducedMotion={reducedMotion} />
           </div>
         </section>
 

@@ -59,7 +59,7 @@
       "location": "Mayagüez, PR",
       "period": "Jul 2025 — Present",
       "eyebrow": "Flutter mobile development",
-      "summary": "I work on Flutter features for MiUni, using Clean Architecture and Cubit to keep the app organized as it grows.",
+      "summary": "Build Flutter features for MiUni using Clean Architecture and Cubit to keep the app organized as it grows.",
       "highlights": [
         "Developed the app tutorial onboarding flow that guides users through key features after their first login.",
         "Built a Pickleball tournament module for team management and live score tracking using Flutter, Dart, and Cubit."
@@ -72,7 +72,7 @@
       "location": "Georgia, US",
       "period": "May 2023 — Jul 2023",
       "eyebrow": "Robotics competition",
-      "summary": "I helped prepare and maintain a Scorbot robotic arm for a SkillsUSA competition.",
+      "summary": "Prepared and maintained a Scorbot robotic arm for a SkillsUSA competition.",
       "highlights": [
         "Assembled and maintained Scorbot robotic-arm wiring components on the circuit board for reliable connectivity and function."
       ]
