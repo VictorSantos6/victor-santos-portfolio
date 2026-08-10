@@ -188,7 +188,7 @@ main, .site-header, footer, .preview-bar, .skip-link { position: relative; z-ind
 .certificate-viewer-actions a:hover,
 .certificate-viewer-actions button:hover { border-color: var(--cta); background: rgba(var(--cta-rgb), .12); }
 .certificate-viewer-canvas { display: grid; min-width: 0; min-height: 0; place-items: center; padding: clamp(10px, 2vw, 24px); overflow: hidden; }
-.certificate-viewer-canvas img { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; border-radius: 4px; background: #fff; object-fit: contain; box-shadow: 0 16px 60px rgba(0, 0, 0, .42); }
+.certificate-viewer-canvas img { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; border-radius: 4px; background: rgb(var(--surface-rgb)); object-fit: contain; box-shadow: 0 16px 60px rgba(0, 0, 0, .42); }
 
 .experience-list { display: grid; gap: 18px; }
 .experience-card { padding: clamp(24px, 4vw, 42px); }
