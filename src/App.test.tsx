@@ -97,9 +97,8 @@ describe('portfolio experience', () => {
     expect(screen.getByRole('link', { name: 'Intro' })).toHaveAttribute('aria-current', 'location')
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-planet', 'exoplanet')
     expect(document.querySelector('.css-space-fallback')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Responsible Conduct of Research for Engineers' })).toBeInTheDocument()
-    expect(screen.getByText('74865898')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Verify credential' })).toHaveAttribute('href', defaultPortfolio.certifications[0].verificationUrl)
+    expect(screen.getByRole('button', { name: 'Open Responsible Conduct of Research for Engineers certificate' })).toBeInTheDocument()
+    expect(screen.getByText(/credential id 74865898/i)).toBeInTheDocument()
   })
 
   it('makes project evidence readable before the dialog opens', () => {
@@ -113,16 +112,26 @@ describe('portfolio experience', () => {
     expect(document.querySelector('.mission-rail')).not.toBeInTheDocument()
   })
 
-  it('shows verified learning milestones in an interactive stack', async () => {
+  it('uses the orbital stack only for certifications and opens a full-screen viewer', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: 'Knowledge in active orbit.' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /computer science & engineering, degree in progress/i })).toHaveAttribute('aria-current', 'true')
+    expect(screen.getByRole('heading', { name: 'Credentials in active orbit.' })).toBeInTheDocument()
+    expect(screen.queryByText('Learning & credentials')).not.toBeInTheDocument()
+    expect(screen.queryByText('Computer Science & Engineering', { selector: '.learning-stack-card strong' })).not.toBeInTheDocument()
+    const certificateCard = screen.getByRole('button', { name: 'Open Responsible Conduct of Research for Engineers certificate' })
+    expect(certificateCard).toHaveAttribute('aria-current', 'true')
 
-    await user.click(screen.getByRole('button', { name: 'Next learning card' }))
+    await user.click(certificateCard)
 
-    expect(screen.getByRole('button', { name: /autonomous systems research, active mission/i })).toHaveAttribute('aria-current', 'true')
+    const viewer = screen.getByRole('dialog', { name: 'Responsible Conduct of Research for Engineers' })
+    expect(viewer).toBeInTheDocument()
+    expect(within(viewer).getByRole('img')).toHaveAttribute('src', '/certifications/responsible-conduct-research-engineers/image')
+    expect(within(viewer).getByRole('link', { name: 'Verify' })).toHaveAttribute('href', defaultPortfolio.certifications[0].verificationUrl)
+
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Responsible Conduct of Research for Engineers' })).not.toBeInTheDocument())
+    await waitFor(() => expect(certificateCard).toHaveFocus())
   })
 
   it('opens project cases through a deep-linkable dialog and closes with Escape', async () => {
