@@ -8,6 +8,12 @@ interface CertificationStackProps {
   reducedMotion: boolean
 }
 
+function certificationImageUrl(certification: Certification) {
+  return certification.imageKey
+    ? `/certifications/${certification.id}/image`
+    : `/certifications/${certification.id}.webp`
+}
+
 export function CertificationStack({ items, reducedMotion }: CertificationStackProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [selected, setSelected] = useState<Certification | null>(null)
@@ -108,7 +114,7 @@ export function CertificationStack({ items, reducedMotion }: CertificationStackP
                 <span>{item.issued}</span>
               </span>
               <span className="learning-visual certification-thumbnail">
-                <img src={`/certifications/${item.id}/image`} alt="" loading="lazy" />
+                <img src={certificationImageUrl(item)} alt="" loading="lazy" />
                 <span className="learning-card-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
               </span>
               <span className="learning-kind">{item.issuer}</span>
@@ -138,7 +144,7 @@ export function CertificationStack({ items, reducedMotion }: CertificationStackP
               </div>
             </header>
             <div className="certificate-viewer-canvas">
-              <img src={`/certifications/${selected.id}/image`} alt={`${selected.name} certificate issued by ${selected.issuer}`} />
+              <img src={certificationImageUrl(selected)} alt={`${selected.name} certificate issued by ${selected.issuer}`} />
             </div>
           </div>
         </div>

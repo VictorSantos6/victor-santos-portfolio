@@ -128,7 +128,7 @@ describe('portfolio experience', () => {
     const viewer = screen.getByRole('dialog', { name: 'Responsible Conduct of Research for Engineers' })
     expect(viewer).toBeInTheDocument()
     expect(viewer.parentElement?.parentElement).toHaveClass('app-shell')
-    expect(within(viewer).getByRole('img')).toHaveAttribute('src', '/certifications/responsible-conduct-research-engineers/image')
+    expect(within(viewer).getByRole('img')).toHaveAttribute('src', '/certifications/responsible-conduct-research-engineers.webp')
     expect(within(viewer).getByRole('link', { name: 'Verify' })).toHaveAttribute('href', defaultPortfolio.certifications[0].verificationUrl)
 
     await user.keyboard('{Escape}')
