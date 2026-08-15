@@ -273,7 +273,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
               <p className="hero-summary">{portfolio.identity.summary}</p>
               <div className="hero-actions">
                 <a className="primary-button" href="#projects" onClick={(event) => handleSectionNavigation(event, 'projects')}>View my projects <ArrowRight size={18} aria-hidden="true" /></a>
-                <a className="text-link" href="/resume" download={contact.resumeName}><Download size={17} aria-hidden="true" /> Download résumé</a>
+                <a className="text-link" href="/Victor-Santos-Resume.pdf" download={contact.resumeName}><Download size={17} aria-hidden="true" /> Download résumé</a>
               </div>
             </div>
             <aside className="currently-card reveal" aria-label="Current details">
