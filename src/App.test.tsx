@@ -79,10 +79,11 @@ describe('portfolio experience', () => {
     expect(screen.getByText('LiDRON Research')).toBeInTheDocument()
     expect(screen.getByText('50%')).toBeInTheDocument()
     expect(screen.getByText('100%')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /victor\.santos6@upr\.edu/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /email me/i })).toHaveAttribute(
       'href',
       'mailto:victor.santos6@upr.edu',
     )
+    expect(screen.queryByText('victor.santos6@upr.edu')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /download résumé/i })).toHaveAttribute(
       'href',
       '/resume',
