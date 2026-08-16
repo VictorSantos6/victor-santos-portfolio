@@ -2,7 +2,10 @@ import { Readable } from 'node:stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import handler, { upstreamUrl } from '../api/[...path].js'
 
-afterEach(() => vi.restoreAllMocks())
+afterEach(() => {
+  vi.restoreAllMocks()
+  delete process.env.SITES_BYPASS_TOKEN
+})
 
 function request(path: string, options: { method?: string; body?: string; headers?: Record<string, string> } = {}) {
   const stream = Readable.from(options.body ? [options.body] : []) as Readable & {
@@ -78,5 +81,16 @@ describe('Vercel portfolio API bridge', () => {
 
     expect(result.statusCode).toBe(403)
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('uses a server-only Sites bypass token when the upstream is access protected', async () => {
+    process.env.SITES_BYPASS_TOKEN = 'sites-secret'
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{"authenticated":false}'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await handler(request('/api/admin/session') as never, response() as never)
+
+    const [, init] = fetchMock.mock.calls[0]
+    expect(init.headers.get('oai-sites-authorization')).toBe('Bearer sites-secret')
   })
 })

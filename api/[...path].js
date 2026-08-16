@@ -14,6 +14,11 @@ function apiOrigin() {
   return configured.replace(/\/$/, '')
 }
 
+function sitesAuthorization() {
+  const token = process.env.SITES_BYPASS_TOKEN
+  return token ? `Bearer ${token}` : null
+}
+
 function requestOrigin(request) {
   const forwardedHost = request.headers['x-forwarded-host']
   const forwardedProto = request.headers['x-forwarded-proto']
@@ -70,6 +75,8 @@ export default async function handler(request, response) {
       else if (Array.isArray(value)) headers.set(name, value.join(', '))
     }
     headers.set('Origin', apiOrigin())
+    const authorization = sitesAuthorization()
+    if (authorization) headers.set('OAI-Sites-Authorization', authorization)
 
     const method = request.method || 'GET'
     const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(request)
