@@ -405,10 +405,18 @@ export default function AdminApp() {
               <Field label="Headline line 1" value={draft.identity.headlineLead} onChange={(value) => update((content) => { content.identity.headlineLead = value })} error={errors['identity.headlineLead']} />
               <Field label="Headline line 2" value={draft.identity.headlineMiddle} onChange={(value) => update((content) => { content.identity.headlineMiddle = value })} error={errors['identity.headlineMiddle']} />
               <Field label="Headline emphasis" value={draft.identity.headlineEmphasis} onChange={(value) => update((content) => { content.identity.headlineEmphasis = value })} error={errors['identity.headlineEmphasis']} />
-              <Field label="Currently building" value={draft.identity.building} onChange={(value) => update((content) => { content.identity.building = value })} error={errors['identity.building']} />
             </div>
             <Field label="Hero summary" value={draft.identity.summary} onChange={(value) => update((content) => { content.identity.summary = value })} error={errors['identity.summary']} multiline />
-            <Field label="Availability status" value={draft.identity.status} onChange={(value) => update((content) => { content.identity.status = value })} error={errors['identity.status']} />
+            <div className="admin-subsection">
+              <div>
+                <h3>Hero status card</h3>
+                <p>Edit the short updates shown in the “Currently” card beside the hero.</p>
+              </div>
+              <div className="field-grid two-column">
+                <Field label="Working on" value={draft.identity.building} onChange={(value) => update((content) => { content.identity.building = value })} error={errors['identity.building']} helper="Replaces the current “LiDRON research and MiUni features” text." />
+                <Field label="Looking for" value={draft.identity.status} onChange={(value) => update((content) => { content.identity.status = value })} error={errors['identity.status']} helper="Controls the availability line beneath Working on." />
+              </div>
+            </div>
           </section>
         )}
 

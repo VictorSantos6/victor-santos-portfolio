@@ -36,12 +36,16 @@ describe('portfolio admin editor', () => {
     const name = await screen.findByLabelText('Name')
     await user.clear(name)
     await user.type(name, 'Victor S. Santos')
+    const workingOn = screen.getByRole('textbox', { name: /^Working on/ })
+    await user.clear(workingOn)
+    await user.type(workingOn, 'LiDRON autonomous landing research')
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Save draft' }))
 
     await waitFor(() => expect(screen.getAllByText('Draft saved.')).toHaveLength(2))
     expect(current.identity.name).toBe('Victor S. Santos')
+    expect(current.identity.building).toBe('LiDRON autonomous landing research')
   })
 
   it('adds a project through the sectioned dashboard', async () => {
