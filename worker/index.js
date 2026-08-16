@@ -17,10 +17,18 @@ const SESSION_TTL_SECONDS = 12 * 60 * 60
 const LOGIN_WINDOW_SECONDS = 15 * 60
 const LOGIN_LOCK_SECONDS = 30 * 60
 const LOGIN_MAX_FAILURES = 5
+const LOGIN_REQUESTS_PER_MINUTE = 10
+const PUBLIC_REQUESTS_PER_MINUTE = 300
+const RATE_LIMIT_WINDOW_MS = 60 * 1000
+const MAX_RATE_LIMIT_BUCKETS = 5000
 const MAX_RESUME_BYTES = 10 * 1024 * 1024
 const MAX_CERTIFICATE_IMAGE_BYTES = 10 * 1024 * 1024
 const PBKDF2_ITERATIONS = 100000
+const PUBLIC_DATA_CACHE = 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400'
+const PUBLIC_MEDIA_CACHE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+const APP_SHELL_CACHE = 'public, max-age=300'
 const encoder = new TextEncoder()
+const rateLimitBuckets = new Map()
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -31,6 +39,28 @@ function json(data, status = 200, extraHeaders = {}) {
       'X-Content-Type-Options': 'nosniff',
       ...extraHeaders,
     },
+  })
+}
+
+function rateLimitResponse(request, scope, limit, now = Date.now()) {
+  const address = request.headers.get('CF-Connecting-IP')
+  if (!address) return null
+
+  const key = `${scope}:${address}`
+  let bucket = rateLimitBuckets.get(key)
+  if (!bucket || now >= bucket.resetAt) bucket = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS }
+  bucket.count += 1
+  rateLimitBuckets.set(key, bucket)
+
+  if (rateLimitBuckets.size > MAX_RATE_LIMIT_BUCKETS) {
+    for (const [bucketKey, value] of rateLimitBuckets) {
+      if (now >= value.resetAt || rateLimitBuckets.size > MAX_RATE_LIMIT_BUCKETS) rateLimitBuckets.delete(bucketKey)
+    }
+  }
+
+  if (bucket.count <= limit) return null
+  return json({ error: 'Too many requests. Try again shortly.' }, 429, {
+    'Retry-After': String(Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))),
   })
 }
 
@@ -290,12 +320,14 @@ async function recordLoginFailure(db, fingerprint, status) {
 
 async function handleApi(request, env, pathname) {
   if (pathname === '/api/portfolio' && request.method === 'GET') {
-    if (!env.DB) return json(defaultPortfolio)
+    const rateLimited = rateLimitResponse(request, 'public-storage', PUBLIC_REQUESTS_PER_MINUTE)
+    if (rateLimited) return rateLimited
+    if (!env.DB) return json(defaultPortfolio, 200, { 'Cache-Control': PUBLIC_DATA_CACHE })
     try {
       const row = await publishedRevision(env.DB)
-      return json(normalizePortfolio(JSON.parse(row.content_json)))
+      return json(normalizePortfolio(JSON.parse(row.content_json)), 200, { 'Cache-Control': PUBLIC_DATA_CACHE })
     } catch {
-      return json(defaultPortfolio)
+      return json(defaultPortfolio, 200, { 'Cache-Control': PUBLIC_DATA_CACHE })
     }
   }
 
@@ -305,6 +337,8 @@ async function handleApi(request, env, pathname) {
 
   if (pathname === '/api/admin/login' && request.method === 'POST') {
     if (!sameOrigin(request)) return json({ error: 'Request origin was rejected.' }, 403)
+    const rateLimited = rateLimitResponse(request, 'admin-login', LOGIN_REQUESTS_PER_MINUTE)
+    if (rateLimited) return rateLimited
     if (!env.DB || !env.ADMIN_SESSION_SECRET || !env.ADMIN_PASSWORD_SALT || !env.ADMIN_PASSWORD_HASH) return json({ error: 'Admin access has not been configured yet.' }, 503)
     const fingerprint = await loginFingerprint(request, env)
     const status = await loginStatus(env.DB, fingerprint)
@@ -455,7 +489,10 @@ function serveAsset(pathname, method) {
   const asset = files.get(pathname)
   if (!asset) return null
   const headers = new Headers({ 'Content-Type': asset.contentType, 'X-Content-Type-Options': 'nosniff' })
-  headers.set('Cache-Control', immutableAssetPattern.test(pathname) ? 'public, max-age=31536000, immutable' : 'public, max-age=300')
+  const cacheControl = immutableAssetPattern.test(pathname)
+    ? 'public, max-age=31536000, immutable'
+    : pathname === '/index.html' ? APP_SHELL_CACHE : PUBLIC_MEDIA_CACHE
+  headers.set('Cache-Control', cacheControl)
   return new Response(method === 'HEAD' ? null : decodeBase64(asset.body), { headers })
 }
 
@@ -470,7 +507,7 @@ async function serveResume(env, method) {
           headers: {
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="${contact.resumeName.replace(/"/g, '')}"`,
-            'Cache-Control': 'no-store',
+            'Cache-Control': PUBLIC_MEDIA_CACHE,
             'X-Content-Type-Options': 'nosniff',
           },
         })
@@ -488,10 +525,10 @@ function validImageSignature(bytes, contentType) {
   return bytes.length >= 12 && new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' && new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP'
 }
 
-function certificateImageResponse(object, method) {
+function certificateImageResponse(object, method, cacheControl = 'no-store') {
   const headers = new Headers({
     'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
-    'Cache-Control': 'no-store',
+    'Cache-Control': cacheControl,
     'X-Content-Type-Options': 'nosniff',
   })
   return new Response(method === 'HEAD' ? null : object.body, { headers })
@@ -506,7 +543,7 @@ async function serveCertificateImage(env, certificationId, method) {
       if (!certification) return new Response(null, { status: 404 })
       if (certification.imageKey && env.R2) {
         const object = await env.R2.get(certification.imageKey)
-        if (object) return certificateImageResponse(object, method)
+        if (object) return certificateImageResponse(object, method, PUBLIC_MEDIA_CACHE)
       }
       return serveAsset(`/certifications/${certification.id}.webp`, method) || new Response(null, { status: 404 })
     } catch {
@@ -522,9 +559,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     if (url.pathname.startsWith('/api/')) return handleApi(request, env, url.pathname)
-    if (url.pathname === '/resume') return serveResume(env, request.method)
+    if (url.pathname === '/resume') {
+      const rateLimited = rateLimitResponse(request, 'public-storage', PUBLIC_REQUESTS_PER_MINUTE)
+      return rateLimited || serveResume(env, request.method)
+    }
     const certificateMatch = url.pathname.match(/^\/certifications\/([a-z0-9]+(?:-[a-z0-9]+)*)\/image$/)
-    if (certificateMatch) return serveCertificateImage(env, certificateMatch[1], request.method)
+    if (certificateMatch) {
+      const rateLimited = rateLimitResponse(request, 'public-storage', PUBLIC_REQUESTS_PER_MINUTE)
+      return rateLimited || serveCertificateImage(env, certificateMatch[1], request.method)
+    }
     const pathname = url.pathname === '/' ? '/index.html' : url.pathname
     const asset = serveAsset(pathname, request.method)
     if (asset) return asset
