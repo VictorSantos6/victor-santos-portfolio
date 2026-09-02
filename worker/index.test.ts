@@ -16,7 +16,7 @@ describe('portfolio worker security helpers', () => {
   it('serves the public fallback but rejects anonymous draft access', async () => {
     const publicResponse = await worker.fetch(new Request('https://portfolio.example/api/portfolio'), {})
     expect(publicResponse.status).toBe(200)
-    expect(publicResponse.headers.get('Cache-Control')).toContain('s-maxage=300')
+    expect(publicResponse.headers.get('Cache-Control')).toBe('no-store')
 
     const privateResponse = await worker.fetch(new Request('https://portfolio.example/api/admin/draft'), {})
     expect(privateResponse.status).toBe(401)

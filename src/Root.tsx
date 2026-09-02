@@ -15,5 +15,5 @@ export default function Root() {
     }
   }, [])
 
-  return path.startsWith('/admin') ? <AdminApp /> : <App />
+  return path.startsWith('/admin') ? <AdminApp /> : <App loadPublished />
 }

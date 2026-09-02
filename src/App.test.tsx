@@ -12,22 +12,20 @@ afterEach(() => {
 })
 
 describe('portfolio experience', () => {
-  it('keeps the bundled hero copy stable instead of replacing it after load', async () => {
-    const stalePublishedContent = structuredClone(defaultPortfolio)
-    stalePublishedContent.identity.headlineLead = 'I build software and learn by'
-    stalePublishedContent.identity.headlineMiddle = ''
-    stalePublishedContent.identity.headlineEmphasis = 'shipping it.'
+  it('loads the published hero content from the admin-backed portfolio API', async () => {
+    const publishedContent = structuredClone(defaultPortfolio)
+    publishedContent.identity.building = 'LiDRON autonomous landing research'
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => stalePublishedContent,
+      json: async () => publishedContent,
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<App />)
+    render(<App loadPublished />)
 
-    expect(screen.getByText(/i build mobile apps/i)).toBeInTheDocument()
-    expect(screen.queryByText(/i build software and learn by/i)).not.toBeInTheDocument()
-    await waitFor(() => expect(fetchMock).not.toHaveBeenCalled())
+    expect(screen.getByText('LiDRON research and MiUni features')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('LiDRON autonomous landing research')).toBeInTheDocument())
+    expect(fetchMock).toHaveBeenCalledWith('/api/portfolio', expect.objectContaining({ cache: 'no-store' }))
   })
 
   it('maps every portfolio chapter to its planetary atmosphere', () => {

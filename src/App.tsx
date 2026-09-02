@@ -71,7 +71,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
   useEffect(() => {
     if (!loadPublished || typeof fetch !== 'function') return
     const controller = new AbortController()
-    fetch('/api/portfolio', { signal: controller.signal })
+    fetch('/api/portfolio', { signal: controller.signal, cache: 'no-store' })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('Portfolio unavailable')))
       .then((content: PortfolioContent) => setPortfolio(content))
       .catch(() => undefined)

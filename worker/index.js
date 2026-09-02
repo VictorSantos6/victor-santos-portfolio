@@ -24,7 +24,7 @@ const MAX_RATE_LIMIT_BUCKETS = 5000
 const MAX_RESUME_BYTES = 10 * 1024 * 1024
 const MAX_CERTIFICATE_IMAGE_BYTES = 10 * 1024 * 1024
 const PBKDF2_ITERATIONS = 100000
-const PUBLIC_DATA_CACHE = 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400'
+const PUBLIC_DATA_CACHE = 'no-store'
 const PUBLIC_MEDIA_CACHE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
 const APP_SHELL_CACHE = 'public, max-age=300'
 const encoder = new TextEncoder()
