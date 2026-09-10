@@ -95,6 +95,7 @@
   "projects": [
     {
       "id": "flash-cards",
+      "images": ["/projects/flash-cards/01-decks.png", "/projects/flash-cards/02-empty-deck.png", "/projects/flash-cards/03-add-flashcard.png", "/projects/flash-cards/04-flashcards.png", "/projects/flash-cards/05-answer.png", "/projects/flash-cards/06-settings.png"],
       "name": "Flash Cards App",
       "period": "Jul 2025 — Aug 2025",
       "stack": ["Flutter", "Dart", "BLoC/Cubit", "Hive"],

@@ -24,6 +24,12 @@ describe('portfolio worker security helpers', () => {
     await expect(privateResponse.json()).resolves.toMatchObject({ error: 'Sign in to continue.' })
   })
 
+  it('keeps the public project-image route outside admin authentication', async () => {
+    const response = await worker.fetch(new Request('https://portfolio.example/api/project-image?key=project-images%2F00000000-0000-4000-8000-000000000000.png'), {})
+    expect(response.status).toBe(503)
+    await expect(response.json()).resolves.toMatchObject({ error: 'Portfolio storage is unavailable.' })
+  })
+
   it('rate limits storage-backed public requests per client address', async () => {
     const headers = { 'CF-Connecting-IP': '192.0.2.10' }
     for (let request = 0; request < 300; request += 1) {
@@ -80,7 +86,11 @@ describe('portfolio worker security helpers', () => {
   it('upgrades legacy snapshots and validates uploaded image signatures', () => {
     const legacy = structuredClone(portfolio) as typeof portfolio & { certifications?: typeof portfolio.certifications }
     delete legacy.certifications
-    expect(normalizePortfolio(legacy).certifications).toEqual(portfolio.certifications)
+    delete legacy.projects[0].images
+    const normalized = normalizePortfolio(legacy)
+    expect(normalized.certifications).toEqual(portfolio.certifications)
+    expect(normalized.projects[0].images).toEqual(portfolio.projects[0].images)
+    expect(normalized.projects.slice(1).every((project) => project.images === undefined)).toBe(true)
     expect(validImageSignature(new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 69, 66, 80]), 'image/webp')).toBe(true)
     expect(validImageSignature(new Uint8Array([82, 73, 70, 70]), 'image/webp')).toBe(false)
   })

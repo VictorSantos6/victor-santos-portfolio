@@ -102,6 +102,20 @@ export function validatePortfolio(value: unknown): ValidationErrors {
       if (projectIds.has(item.id)) errors[`${base}.id`] = 'Each project ID must be unique.'
       projectIds.add(item.id)
     }
+    if (item.images !== undefined) {
+      requireList(errors, `${base}.images`, item.images, 20).forEach((entry, imageIndex) => {
+        const imagePath = `${base}.images.${imageIndex}`
+        requireText(errors, imagePath, entry, 2000)
+        if (typeof entry === 'string') {
+          try {
+            const url = new URL(entry, 'https://portfolio.local')
+            if (entry !== entry.trim() || /[\\\s]/.test(entry) || !(entry.startsWith('/') && !entry.startsWith('//') || entry.startsWith('https://')) || url.protocol !== 'https:') throw new Error()
+          } catch {
+            errors[imagePath] = 'Use an HTTPS image URL or a path starting with /.'
+          }
+        }
+      })
+    }
     if (!['cyan', 'blue', 'amber', 'violet'].includes(String(item.accent))) errors[`${base}.accent`] = 'Choose an available accent.'
     requireList(errors, `${base}.stack`, item.stack, 20).forEach((entry, itemIndex) => requireText(errors, `${base}.stack.${itemIndex}`, entry, 80))
     requireList(errors, `${base}.outcomes`, item.outcomes, 20).forEach((entry, itemIndex) => requireText(errors, `${base}.outcomes.${itemIndex}`, entry, 300))

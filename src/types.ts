@@ -24,6 +24,7 @@ export interface Experience {
 }
 
 export interface Project {
+  images?: string[]
   id: string
   name: string
   period: string

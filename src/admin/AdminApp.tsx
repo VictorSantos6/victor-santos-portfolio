@@ -65,6 +65,11 @@ function slug(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `item-${Date.now()}`
 }
 
+function projectImagePreviewUrl(image: string, revisionUpdatedAt?: string) {
+  if (!image.startsWith('/api/project-image?')) return image
+  return `${image.replace('/api/project-image?', '/api/admin/project-image?')}&revision=${encodeURIComponent(revisionUpdatedAt || '')}`
+}
+
 interface FieldProps {
   label: string
   value: string
@@ -354,6 +359,28 @@ export default function AdminApp() {
     }
   }
 
+  const uploadProjectImage = async (projectId: string, file?: File) => {
+    if (!file) return
+    if (dirty && !await save()) return
+    setBusy(true)
+    setProblem('')
+    try {
+      const result = await api<{ revision: PortfolioRevision }>(`/api/admin/project-image?id=${encodeURIComponent(projectId)}`, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type, 'X-File-Name': file.name },
+      })
+      setRevision(result.revision)
+      setDraft(clone(result.revision.content))
+      setBaseline(clone(result.revision.content))
+      setNotice('Project image uploaded to the draft. Publish when you are ready.')
+    } catch (reason) {
+      setProblem(reason instanceof Error ? reason.message : 'Unable to upload the project image.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (!draft) {
     return <main className="admin-loading"><p>{problem || 'Loading the editor…'}</p>{problem && <button className="secondary-button" type="button" onClick={loadDraft}>Try again</button>}</main>
   }
@@ -362,7 +389,7 @@ export default function AdminApp() {
     id: slug(`experience-${content.experiences.length + 1}`), organization: 'New organization', role: 'Role', location: 'Location', period: 'Dates', eyebrow: 'Area of work', summary: 'Describe the work and your contribution.', highlights: ['Add a measurable highlight.'],
   }))
   const addProject = () => update((content) => content.projects.push({
-    id: slug(`project-${content.projects.length + 1}`), name: 'New project', period: 'Dates', stack: ['Technology'], signal: `${String(content.projects.length + 1).padStart(2, '0')} / PROJECT`, problem: 'Describe the problem.', contribution: 'Describe what you built.', outcomes: ['Add an outcome.'], accent: 'cyan',
+    id: slug(`project-${content.projects.length + 1}`), name: 'New project', period: 'Dates', stack: ['Technology'], signal: `${String(content.projects.length + 1).padStart(2, '0')} / PROJECT`, problem: 'Describe the problem.', contribution: 'Describe what you built.', outcomes: ['Add an outcome.'], accent: 'cyan', images: [],
   }))
   const addCertification = () => update((content) => content.certifications.push({
     id: slug(`certification-${content.certifications.length + 1}`), name: 'New certification', issuer: 'Issuing organization', issued: 'Issue date', detail: 'Certification details', credentialId: 'Credential ID', verificationUrl: 'https://example.com/verify', imageKey: null, imageName: 'certificate.webp',
@@ -505,6 +532,24 @@ export default function AdminApp() {
                     {(['id', 'name', 'period', 'signal'] as const).map((key) => <Field key={key} label={key === 'id' ? 'ID / URL slug' : key[0].toUpperCase() + key.slice(1)} value={project[key]} onChange={(value) => update((content) => { content.projects[index][key] = value })} error={errors[`projects.${index}.${key}`]} />)}
                     <label className="admin-field"><span>Accent</span><select value={project.accent} onChange={(event) => update((content) => { content.projects[index].accent = event.target.value as Project['accent'] })}>{['cyan', 'blue', 'amber', 'violet'].map((accent) => <option key={accent} value={accent}>{accent[0].toUpperCase() + accent.slice(1)}</option>)}</select></label>
                   </div>
+                  <fieldset className="project-images-admin">
+                    <legend>Project images</legend>
+                    <div className="project-images-heading">
+                      <div><strong>Gallery</strong><small>WEBP, PNG, or JPEG · 10 MB maximum each · 20 images maximum</small></div>
+                      <label className={`secondary-button compact ${busy ? 'disabled' : ''}`}><FileUp size={16} /> Add image<input type="file" accept="image/webp,image/png,image/jpeg,.webp,.png,.jpg,.jpeg" disabled={busy} onChange={(event) => { uploadProjectImage(project.id, event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
+                    </div>
+                    {(project.images ?? []).length ? (
+                      <div className="project-image-grid">
+                        {(project.images ?? []).map((image, imageIndex) => (
+                          <article className="project-image-item" key={`${image}-${imageIndex}`}>
+                            <img src={projectImagePreviewUrl(image, revision?.updatedAt)} alt={`${project.name} screenshot ${imageIndex + 1}`} />
+                            <div><span>Image {imageIndex + 1}</span><ListActions index={imageIndex} length={project.images?.length ?? 0} onMove={(from, to) => update((content) => { content.projects[index].images = move(content.projects[index].images ?? [], from, to) })} onRemove={() => update((content) => { content.projects[index].images?.splice(imageIndex, 1) })} name={`${project.name} image ${imageIndex + 1}`} /></div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : <p className="empty-editor-state">No images for this project yet.</p>}
+                    {errors[`projects.${index}.images`] && <small className="field-error">{errors[`projects.${index}.images`]}</small>}
+                  </fieldset>
                   <TextList label="Technology" values={project.stack} onChange={(values) => update((content) => { content.projects[index].stack = values })} errors={errors} path={`projects.${index}.stack`} addLabel="Add technology" />
                   <Field label="Problem" value={project.problem} onChange={(value) => update((content) => { content.projects[index].problem = value })} error={errors[`projects.${index}.problem`]} multiline />
                   <Field label="Contribution" value={project.contribution} onChange={(value) => update((content) => { content.projects[index].contribution = value })} error={errors[`projects.${index}.contribution`]} multiline />

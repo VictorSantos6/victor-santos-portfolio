@@ -283,6 +283,17 @@ button:disabled,
 .text-list legend { padding: 0 7px; color: var(--admin-muted); font-size: 13px; font-weight: 700; }
 .text-list-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
 .text-list-row .admin-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.project-images-admin { display: grid; gap: 16px; margin: 0; padding: 18px; border: 1px solid var(--admin-line); border-radius: 12px; }
+.project-images-admin legend { padding: 0 7px; color: var(--admin-muted); font-size: 13px; font-weight: 700; }
+.project-images-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.project-images-heading > div { display: grid; gap: 4px; }
+.project-images-heading small { color: var(--admin-muted); }
+.project-images-heading input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; clip-path: inset(50%); }
+.project-image-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.project-image-item { overflow: hidden; border: 1px solid var(--admin-line); border-radius: 10px; background: rgba(4, 12, 24, 0.56); }
+.project-image-item img { display: block; width: 100%; aspect-ratio: 16 / 10; background: rgba(255, 255, 255, 0.04); object-fit: cover; }
+.project-image-item > div { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 12px; }
+.project-image-item span { color: var(--admin-muted); font-size: 12px; font-weight: 700; }
 .check-field { display: flex; min-height: 44px; align-items: center; gap: 10px; color: var(--admin-muted); cursor: pointer; }
 .check-field input { width: 20px; height: 20px; accent-color: var(--admin-accent); }
 .impact-editor { display: grid; gap: 12px; }
@@ -342,6 +353,8 @@ button:disabled,
   .text-list { padding: 14px 10px; }
   .text-list-row { grid-template-columns: 1fr; }
   .text-list-row .item-actions { justify-content: flex-end; }
+  .project-images-heading { align-items: flex-start; flex-direction: column; }
+  .project-image-grid { grid-template-columns: 1fr; }
   .impact-row { grid-template-columns: 1fr; }
   .impact-row .danger-icon { justify-self: end; }
 }

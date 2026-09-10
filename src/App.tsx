@@ -5,6 +5,7 @@ import {
   ContactRound,
   Download,
   ExternalLink,
+  Images,
   Mail,
   Orbit,
 } from 'lucide-react'
@@ -325,15 +326,20 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
           <div className="section-heading reveal"><p className="eyebrow">03 · Selected projects</p><h2 id="projects-title">Things I’ve built while learning.</h2></div>
           <div className="project-grid">
             {projects.map((project) => (
-              <button className={`project-card accent-${project.accent} reveal`} id={`case-${project.id}`} type="button" key={project.id} onClick={(event) => openProject(project, event.currentTarget)} aria-haspopup="dialog">
+              <article className={`project-card accent-${project.accent} reveal`} id={`case-${project.id}`} key={project.id}>
+                <button className="project-card-content" type="button" onClick={(event) => openProject(project, event.currentTarget)} aria-haspopup="dialog">
                 <span className="project-heading"><span className="project-category">{project.signal.split('/')[1]?.trim()}</span><span>{project.period}</span></span>
                 <strong>{project.name}</strong>
                 <span className="project-stack">{project.stack.join(' · ')}</span>
                 <span className="project-field"><b>Problem</b>{project.problem}</span>
                 <span className="project-field"><b>My role</b>{project.contribution}</span>
                 <span className="project-outcome"><b>Outcome</b>{project.outcomes[0]}</span>
-                <span className="project-open">View full project <ArrowRight size={16} aria-hidden="true" /></span>
-              </button>
+                <span className="project-card-footer">
+                  <span className="project-open">View full project <ArrowRight size={16} aria-hidden="true" /></span>
+                  {Boolean(project.images?.length) && <span className="project-image-count" aria-label={`${project.images!.length} ${project.images!.length === 1 ? 'photo' : 'photos'}`}><Images size={16} aria-hidden="true" /><span>{project.images!.length}</span></span>}
+                </span>
+                </button>
+              </article>
             ))}
           </div>
         </section>

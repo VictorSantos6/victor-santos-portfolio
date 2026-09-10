@@ -1,5 +1,6 @@
 import { Check, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ProjectGallery } from './ProjectGallery'
 import type { Project } from '../types'
 
 interface ProjectDialogProps {
@@ -108,6 +109,8 @@ export function ProjectDialog({ project, onClose, reducedMotion }: ProjectDialog
             <X aria-hidden="true" />
           </button>
         </header>
+
+        <ProjectGallery key={`${project.id}-${JSON.stringify(project.images)}`} images={project.images} name={project.name} />
 
         <div className="dialog-meta">
           <span>{project.period}</span>

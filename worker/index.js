@@ -11,6 +11,16 @@ const bundledCertifications = [{
   imageKey: null,
   imageName: 'Victor_Santos_CITI_Responsible_Conduct_of_Research.webp',
 }]
+const bundledProjectImages = {
+  'flash-cards': [
+    '/projects/flash-cards/01-decks.png',
+    '/projects/flash-cards/02-empty-deck.png',
+    '/projects/flash-cards/03-add-flashcard.png',
+    '/projects/flash-cards/04-flashcards.png',
+    '/projects/flash-cards/05-answer.png',
+    '/projects/flash-cards/06-settings.png',
+  ],
+}
 
 const SESSION_COOKIE = '__Host-portfolio-admin'
 const SESSION_TTL_SECONDS = 12 * 60 * 60
@@ -23,6 +33,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000
 const MAX_RATE_LIMIT_BUCKETS = 5000
 const MAX_RESUME_BYTES = 10 * 1024 * 1024
 const MAX_CERTIFICATE_IMAGE_BYTES = 10 * 1024 * 1024
+const MAX_PROJECT_IMAGE_BYTES = 10 * 1024 * 1024
 const PBKDF2_ITERATIONS = 100000
 const PUBLIC_DATA_CACHE = 'no-store'
 const PUBLIC_MEDIA_CACHE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
@@ -214,6 +225,20 @@ function validatePortfolio(value) {
       if (projectIds.has(item.id)) errors[`${path}.id`] = 'Each project ID must be unique.'
       projectIds.add(item.id)
     }
+    if (item.images !== undefined) {
+      list( `${path}.images`, item.images, 20).forEach((entry, imageIndex) => {
+        const imagePath = `${path}.images.${imageIndex}`
+        required( imagePath, entry, 2000)
+        if (typeof entry === 'string') {
+          try {
+            const url = new URL(entry, 'https://portfolio.local')
+            if (entry !== entry.trim() || /[\\\s]/.test(entry) || !(entry.startsWith('/') && !entry.startsWith('//') || entry.startsWith('https://')) || url.protocol !== 'https:') throw new Error()
+          } catch {
+            errors[imagePath] = 'Use an HTTPS image URL or a path starting with /.'
+          }
+        }
+      })
+    }
     if (!['cyan', 'blue', 'amber', 'violet'].includes(item.accent)) errors[`${path}.accent`] = 'Choose an available accent.'
     list(`${path}.stack`, item.stack, 20).forEach((entry, entryIndex) => required(`${path}.stack.${entryIndex}`, entry, 80))
     list(`${path}.outcomes`, item.outcomes, 20).forEach((entry, entryIndex) => required(`${path}.outcomes.${entryIndex}`, entry, 300))
@@ -242,8 +267,21 @@ function validatePortfolio(value) {
 }
 
 function normalizePortfolio(content) {
-  if (Array.isArray(content.certifications)) return content
-  return { ...content, certifications: structuredClone(defaultPortfolio.certifications || bundledCertifications) }
+  const normalized = Array.isArray(content.certifications)
+    ? content
+    : { ...content, certifications: structuredClone(defaultPortfolio.certifications || bundledCertifications) }
+  if (!Array.isArray(normalized.projects)) return normalized
+  const bundledProjects = new Map((defaultPortfolio.projects || []).map((project) => [project.id, project]))
+  const projects = normalized.projects.map((project) => {
+    const bundled = bundledProjects.get(project.id)
+    const bundledImages = bundled?.images || bundledProjectImages[project.id]
+    return project.images === undefined && Array.isArray(bundledImages)
+      ? { ...project, images: structuredClone(bundledImages) }
+      : project
+  })
+  return projects.some((project, index) => project !== normalized.projects[index])
+    ? { ...normalized, projects }
+    : normalized
 }
 
 function parseRevision(row) {
@@ -362,10 +400,13 @@ async function handleApi(request, env, pathname) {
     })
   }
 
-  const authError = await requireAdmin(request, env)
-  if (authError) return authError
+  const isPublicProjectImageRequest = pathname === '/api/project-image' && request.method === 'GET'
+  if (!isPublicProjectImageRequest) {
+    const authError = await requireAdmin(request, env)
+    if (authError) return authError
+    if (request.method !== 'GET' && !sameOrigin(request)) return json({ error: 'Request origin was rejected.' }, 403)
+  }
   if (!env.DB) return json({ error: 'Portfolio storage is unavailable.' }, 503)
-  if (request.method !== 'GET' && !sameOrigin(request)) return json({ error: 'Request origin was rejected.' }, 403)
 
   if (pathname === '/api/admin/draft' && request.method === 'GET') {
     const row = await draftRevision(env.DB)
@@ -432,6 +473,25 @@ async function handleApi(request, env, pathname) {
     return json({ revision: parseRevision(row) })
   }
 
+  if (pathname === '/api/project-image' && request.method === 'GET') {
+    const rateLimited = rateLimitResponse(request, 'public-storage', PUBLIC_REQUESTS_PER_MINUTE)
+    if (rateLimited) return rateLimited
+    if (!env.DB || !env.R2) return new Response(null, { status: 404 })
+    const key = new URL(request.url).searchParams.get('key') || ''
+    const reference = projectImageReference(key)
+    if (!reference) return new Response(null, { status: 404 })
+    try {
+      const row = await publishedRevision(env.DB)
+      const content = normalizePortfolio(JSON.parse(row.content_json))
+      const isPublished = content.projects.some((project) => Array.isArray(project.images) && project.images.includes(reference))
+      if (!isPublished) return new Response(null, { status: 404 })
+      const object = await env.R2.get(key)
+      return object ? imageResponse(object, request.method, PUBLIC_MEDIA_CACHE) : new Response(null, { status: 404 })
+    } catch {
+      return new Response(null, { status: 404 })
+    }
+  }
+
   if (pathname === '/api/admin/certification-image' && request.method === 'GET') {
     const certificationId = new URL(request.url).searchParams.get('id') || ''
     const row = await draftRevision(env.DB)
@@ -440,7 +500,7 @@ async function handleApi(request, env, pathname) {
     if (!certification) return json({ error: 'Certification not found.' }, 404)
     if (certification.imageKey && env.R2) {
       const object = await env.R2.get(certification.imageKey)
-      if (object) return certificateImageResponse(object, request.method)
+      if (object) return imageResponse(object, request.method)
     }
     return serveAsset(`/certifications/${certification.id}.webp`, request.method) || new Response(null, { status: 404 })
   }
@@ -466,6 +526,46 @@ async function handleApi(request, env, pathname) {
     await env.R2.put(key, bytes, { httpMetadata: { contentType } })
     certification.imageKey = key
     certification.imageName = fileName
+    const now = new Date().toISOString()
+    await env.DB.prepare("UPDATE portfolio_revisions SET content_json = ?, updated_at = ? WHERE id = ? AND status = 'draft'")
+      .bind(JSON.stringify(content), now, current.id).run()
+    const row = await env.DB.prepare('SELECT * FROM portfolio_revisions WHERE id = ?').bind(current.id).first()
+    return json({ revision: parseRevision(row) })
+  }
+
+  if (pathname === '/api/admin/project-image' && request.method === 'GET') {
+    if (!env.R2) return json({ error: 'Project image storage is unavailable.' }, 503)
+    const key = new URL(request.url).searchParams.get('key') || ''
+    const reference = projectImageReference(key)
+    if (!reference) return new Response(null, { status: 404 })
+    const row = await draftRevision(env.DB)
+    const content = normalizePortfolio(JSON.parse(row.content_json))
+    const isInDraft = content.projects.some((project) => Array.isArray(project.images) && project.images.includes(reference))
+    if (!isInDraft) return new Response(null, { status: 404 })
+    const object = await env.R2.get(key)
+    return object ? imageResponse(object, request.method) : new Response(null, { status: 404 })
+  }
+
+  if (pathname === '/api/admin/project-image' && request.method === 'PUT') {
+    if (!env.R2) return json({ error: 'Project image storage is unavailable.' }, 503)
+    const projectId = new URL(request.url).searchParams.get('id') || ''
+    const current = await draftRevision(env.DB)
+    const content = normalizePortfolio(JSON.parse(current.content_json))
+    const project = content.projects.find((item) => item.id === projectId)
+    if (!project) return json({ error: 'Save this project before uploading an image.' }, 404)
+    if ((project.images || []).length >= 20) return json({ error: 'Use no more than 20 images per project.' }, 400)
+    const contentType = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase()
+    if (!['image/webp', 'image/png', 'image/jpeg'].includes(contentType)) return json({ error: 'Choose a WEBP, PNG, or JPEG image.' }, 415)
+    const declaredLength = Number(request.headers.get('Content-Length') || 0)
+    if (declaredLength > MAX_PROJECT_IMAGE_BYTES) return json({ error: 'The image must be 10 MB or smaller.' }, 413)
+    const bytes = new Uint8Array(await request.arrayBuffer())
+    if (!bytes.length || bytes.length > MAX_PROJECT_IMAGE_BYTES) return json({ error: 'The image must be between 1 byte and 10 MB.' }, 413)
+    if (!validImageSignature(bytes, contentType)) return json({ error: 'The file signature does not match the selected image type.' }, 415)
+    const extension = contentType === 'image/png' ? 'png' : contentType === 'image/jpeg' ? 'jpg' : 'webp'
+    const key = `project-images/${crypto.randomUUID()}.${extension}`
+    const reference = projectImageReference(key)
+    await env.R2.put(key, bytes, { httpMetadata: { contentType } })
+    project.images = [...(project.images || []), reference]
     const now = new Date().toISOString()
     await env.DB.prepare("UPDATE portfolio_revisions SET content_json = ?, updated_at = ? WHERE id = ? AND status = 'draft'")
       .bind(JSON.stringify(content), now, current.id).run()
@@ -525,7 +625,13 @@ function validImageSignature(bytes, contentType) {
   return bytes.length >= 12 && new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' && new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP'
 }
 
-function certificateImageResponse(object, method, cacheControl = 'no-store') {
+function projectImageReference(key) {
+  return /^project-images\/[0-9a-f-]{36}\.(?:png|jpg|webp)$/.test(key)
+    ? `/api/project-image?key=${encodeURIComponent(key)}`
+    : null
+}
+
+function imageResponse(object, method, cacheControl = 'no-store') {
   const headers = new Headers({
     'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
     'Cache-Control': cacheControl,
@@ -543,7 +649,7 @@ async function serveCertificateImage(env, certificationId, method) {
       if (!certification) return new Response(null, { status: 404 })
       if (certification.imageKey && env.R2) {
         const object = await env.R2.get(certification.imageKey)
-        if (object) return certificateImageResponse(object, method, PUBLIC_MEDIA_CACHE)
+        if (object) return imageResponse(object, method, PUBLIC_MEDIA_CACHE)
       }
       return serveAsset(`/certifications/${certification.id}.webp`, method) || new Response(null, { status: 404 })
     } catch {
