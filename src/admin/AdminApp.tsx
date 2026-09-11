@@ -389,7 +389,7 @@ export default function AdminApp() {
     id: slug(`experience-${content.experiences.length + 1}`), organization: 'New organization', role: 'Role', location: 'Location', period: 'Dates', eyebrow: 'Area of work', summary: 'Describe the work and your contribution.', highlights: ['Add a measurable highlight.'],
   }))
   const addProject = () => update((content) => content.projects.push({
-    id: slug(`project-${content.projects.length + 1}`), name: 'New project', period: 'Dates', stack: ['Technology'], signal: `${String(content.projects.length + 1).padStart(2, '0')} / PROJECT`, problem: 'Describe the problem.', contribution: 'Describe what you built.', outcomes: ['Add an outcome.'], accent: 'cyan', images: [],
+    id: slug(`project-${content.projects.length + 1}`), name: 'New project', period: 'Dates', status: 'in-progress', stack: ['Technology'], signal: `${String(content.projects.length + 1).padStart(2, '0')} / PROJECT`, problem: 'Describe the problem.', contribution: 'Describe what you built.', outcomes: ['Add an outcome.'], accent: 'cyan', images: [],
   }))
   const addCertification = () => update((content) => content.certifications.push({
     id: slug(`certification-${content.certifications.length + 1}`), name: 'New certification', issuer: 'Issuing organization', issued: 'Issue date', detail: 'Certification details', credentialId: 'Credential ID', verificationUrl: 'https://example.com/verify', imageKey: null, imageName: 'certificate.webp',
@@ -530,6 +530,7 @@ export default function AdminApp() {
                   <div className="card-toolbar"><div><span className="card-index">{String(index + 1).padStart(2, '0')}</span><h3>{project.name}</h3></div><ListActions index={index} length={draft.projects.length} onMove={(from, to) => update((content) => { content.projects = move(content.projects, from, to) })} onRemove={() => window.confirm('Delete this project from the draft?') && update((content) => { content.projects.splice(index, 1) })} name={project.name} /></div>
                   <div className="field-grid two-column">
                     {(['id', 'name', 'period', 'signal'] as const).map((key) => <Field key={key} label={key === 'id' ? 'ID / URL slug' : key[0].toUpperCase() + key.slice(1)} value={project[key]} onChange={(value) => update((content) => { content.projects[index][key] = value })} error={errors[`projects.${index}.${key}`]} />)}
+                    <label className="admin-field"><span>Status</span><select value={project.status} onChange={(event) => update((content) => { content.projects[index].status = event.target.value as Project['status'] })} aria-invalid={Boolean(errors[`projects.${index}.status`])}><option value="completed">Completed</option><option value="in-progress">In progress</option></select>{errors[`projects.${index}.status`] && <small className="field-error">{errors[`projects.${index}.status`]}</small>}</label>
                     <label className="admin-field"><span>Accent</span><select value={project.accent} onChange={(event) => update((content) => { content.projects[index].accent = event.target.value as Project['accent'] })}>{['cyan', 'blue', 'amber', 'violet'].map((accent) => <option key={accent} value={accent}>{accent[0].toUpperCase() + accent.slice(1)}</option>)}</select></label>
                   </div>
                   <fieldset className="project-images-admin">

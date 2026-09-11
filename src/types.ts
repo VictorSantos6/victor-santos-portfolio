@@ -23,11 +23,14 @@ export interface Experience {
   }>
 }
 
+export type ProjectStatus = 'completed' | 'in-progress'
+
 export interface Project {
   images?: string[]
   id: string
   name: string
   period: string
+  status: ProjectStatus
   stack: string[]
   signal: string
   problem: string

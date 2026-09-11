@@ -80,16 +80,20 @@ describe('portfolio worker security helpers', () => {
     expect(validatePortfolio(portfolio)).toEqual({})
     const unsafe = structuredClone(portfolio)
     unsafe.contact.intro = '<b>unsafe</b>'
+    unsafe.projects[0].status = 'live'
     expect(validatePortfolio(unsafe)).toHaveProperty('contact.intro', 'HTML is not allowed.')
+    expect(validatePortfolio(unsafe)).toHaveProperty('projects.0.status', 'Choose Completed or In progress.')
   })
 
   it('upgrades legacy snapshots and validates uploaded image signatures', () => {
     const legacy = structuredClone(portfolio) as typeof portfolio & { certifications?: typeof portfolio.certifications }
     delete legacy.certifications
     delete legacy.projects[0].images
+    Reflect.deleteProperty(legacy.projects[0], 'status')
     const normalized = normalizePortfolio(legacy)
     expect(normalized.certifications).toEqual(portfolio.certifications)
     expect(normalized.projects[0].images).toEqual(portfolio.projects[0].images)
+    expect(normalized.projects[0].status).toBe('completed')
     expect(normalized.projects.slice(1).every((project) => project.images === undefined)).toBe(true)
     expect(validImageSignature(new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 69, 66, 80]), 'image/webp')).toBe(true)
     expect(validImageSignature(new Uint8Array([82, 73, 70, 70]), 'image/webp')).toBe(false)

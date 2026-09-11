@@ -22,6 +22,22 @@ import { sectionThemes, themeCssVariables } from './theme'
 import type { SectionId, ThemeCSSProperties } from './theme'
 import type { PortfolioContent, Project } from './types'
 
+type ProjectFilter = 'all' | Project['status']
+
+const projectFilters: Array<{ id: ProjectFilter; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'in-progress', label: 'In progress' },
+]
+
+function projectStatusLabel(status: Project['status']) {
+  return status === 'completed' ? 'Completed' : 'In progress'
+}
+
+function emptyProjectFilterMessage(filter: Exclude<ProjectFilter, 'all'>) {
+  return filter === 'completed' ? 'No completed projects yet.' : 'No in-progress projects yet.'
+}
+
 const SpaceScene = lazy(() => import('./components/SpaceScene'))
 
 const navigationItems = [
@@ -59,6 +75,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
   const scrollProgress = useRef(0)
   const [activeSection, setActiveSection] = useState<SectionId>('top')
   const [selectedProject, setSelectedProject] = useState<Project | null>(() => projectFromHash(initialContent.projects))
+  const [projectFilter, setProjectFilter] = useState<ProjectFilter>('all')
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches)
   const appShell = useRef<HTMLDivElement>(null)
   const previousSection = useRef<SectionId>('top')
@@ -68,6 +85,9 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
   const lastBrandActivation = useRef(0)
   const activeTheme = sectionThemes[activeSection]
   const { certifications, contact, education, experiences, projects, skillGroups } = portfolio
+  const filteredProjects = projectFilter === 'all'
+    ? projects
+    : projects.filter((project) => project.status === projectFilter)
 
   useEffect(() => {
     if (!loadPublished || typeof fetch !== 'function') return
@@ -324,11 +344,16 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
 
         <section className="projects-section chapter" id="projects" aria-labelledby="projects-title">
           <div className="section-heading reveal"><p className="eyebrow">03 · Selected projects</p><h2 id="projects-title">Things I’ve built while learning.</h2></div>
+          <div className="project-filters reveal" role="group" aria-label="Filter projects by status">
+            {projectFilters.map((filter) => (
+              <button type="button" key={filter.id} aria-pressed={projectFilter === filter.id} onClick={() => setProjectFilter(filter.id)}>{filter.label}</button>
+            ))}
+          </div>
           <div className="project-grid">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <article className={`project-card accent-${project.accent} reveal`} id={`case-${project.id}`} key={project.id}>
                 <button className="project-card-content" type="button" onClick={(event) => openProject(project, event.currentTarget)} aria-haspopup="dialog">
-                <span className="project-heading"><span className="project-category">{project.signal.split('/')[1]?.trim()}</span><span>{project.period}</span></span>
+                <span className="project-heading"><span className="project-category">{project.signal.split('/')[1]?.trim()}</span><span className={`project-status project-status--${project.status}`}>{projectStatusLabel(project.status)}</span></span>
                 <strong>{project.name}</strong>
                 <span className="project-stack">{project.stack.join(' · ')}</span>
                 <span className="project-field"><b>Problem</b>{project.problem}</span>
@@ -342,6 +367,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
               </article>
             ))}
           </div>
+          {filteredProjects.length === 0 && projectFilter !== 'all' && <p className="project-empty-state" role="status">{emptyProjectFilterMessage(projectFilter)}</p>}
         </section>
 
         <section className="contact-section chapter" id="contact" aria-labelledby="contact-title">

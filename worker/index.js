@@ -239,6 +239,7 @@ function validatePortfolio(value) {
         }
       })
     }
+    if (!['completed', 'in-progress'].includes(item.status)) errors[`${path}.status`] = 'Choose Completed or In progress.'
     if (!['cyan', 'blue', 'amber', 'violet'].includes(item.accent)) errors[`${path}.accent`] = 'Choose an available accent.'
     list(`${path}.stack`, item.stack, 20).forEach((entry, entryIndex) => required(`${path}.stack.${entryIndex}`, entry, 80))
     list(`${path}.outcomes`, item.outcomes, 20).forEach((entry, entryIndex) => required(`${path}.outcomes.${entryIndex}`, entry, 300))
@@ -273,11 +274,11 @@ function normalizePortfolio(content) {
   if (!Array.isArray(normalized.projects)) return normalized
   const bundledProjects = new Map((defaultPortfolio.projects || []).map((project) => [project.id, project]))
   const projects = normalized.projects.map((project) => {
+    let upgraded = project.status === undefined ? { ...project, status: 'completed' } : project
     const bundled = bundledProjects.get(project.id)
     const bundledImages = bundled?.images || bundledProjectImages[project.id]
-    return project.images === undefined && Array.isArray(bundledImages)
-      ? { ...project, images: structuredClone(bundledImages) }
-      : project
+    if (upgraded.images === undefined && Array.isArray(bundledImages)) upgraded = { ...upgraded, images: structuredClone(bundledImages) }
+    return upgraded
   })
   return projects.some((project, index) => project !== normalized.projects[index])
     ? { ...normalized, projects }
@@ -295,8 +296,9 @@ function parseRevision(row) {
 
 async function normalizeRevision(db, row) {
   const content = JSON.parse(row.content_json)
-  if (Array.isArray(content.certifications)) return row
-  const normalizedJson = JSON.stringify(normalizePortfolio(content))
+  const normalized = normalizePortfolio(content)
+  if (normalized === content) return row
+  const normalizedJson = JSON.stringify(normalized)
   await db.prepare('UPDATE portfolio_revisions SET content_json = ? WHERE id = ?').bind(normalizedJson, row.id).run()
   return { ...row, content_json: normalizedJson }
 }

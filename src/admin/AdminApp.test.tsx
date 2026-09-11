@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defaultPortfolio } from '../data/portfolio'
@@ -59,6 +59,8 @@ describe('portfolio admin editor', () => {
     await user.click(screen.getByRole('button', { name: 'Add project' }))
 
     expect(screen.getByDisplayValue('New project')).toBeInTheDocument()
+    const newProject = screen.getByRole('heading', { name: 'New project' }).closest('.editor-card')!
+    expect(within(newProject).getByRole('combobox', { name: 'Status' })).toHaveValue('in-progress')
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
   })
 

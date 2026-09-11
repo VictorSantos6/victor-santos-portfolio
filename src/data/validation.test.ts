@@ -29,6 +29,15 @@ describe('portfolio content validation', () => {
     })
   })
 
+  it('accepts only the supported project statuses', () => {
+    const content = structuredClone(defaultPortfolio)
+    content.projects[0].status = 'live' as never
+
+    expect(validatePortfolio(content)).toMatchObject({
+      'projects.0.status': 'Choose Completed or In progress.',
+    })
+  })
+
   it('seeds only the CITI certification and validates certification IDs and links', () => {
     expect(defaultPortfolio.certifications).toHaveLength(1)
     expect(defaultPortfolio.certifications[0]).toMatchObject({

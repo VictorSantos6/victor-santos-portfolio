@@ -111,6 +111,37 @@ describe('portfolio experience', () => {
     expect(document.querySelector('.mission-rail')).not.toBeInTheDocument()
   })
 
+  it('shows project statuses, keeps dates inside details, and filters the project grid', async () => {
+    const content = structuredClone(defaultPortfolio)
+    content.projects[1].status = 'in-progress'
+    const user = userEvent.setup()
+
+    render(<App initialContent={content} />)
+
+    const flashCards = screen.getByRole('button', { name: /flash cards app/i })
+    expect(flashCards).toHaveTextContent('Completed')
+    expect(flashCards).not.toHaveTextContent('Jul 2025 — Aug 2025')
+
+    await user.click(screen.getByRole('button', { name: 'In progress' }))
+    expect(screen.getByRole('button', { name: /esports organizer/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /flash cards app/i })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /esports organizer/i }))
+    expect(within(screen.getByRole('dialog', { name: /esports organizer/i })).getByText('Jul 2025 — Present')).toBeInTheDocument()
+  })
+
+  it('keeps empty status filters available with a helpful result', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const inProgress = screen.getByRole('button', { name: 'In progress' })
+    expect(inProgress).toHaveAttribute('aria-pressed', 'false')
+    await user.click(inProgress)
+
+    expect(inProgress).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('status')).toHaveTextContent('No in-progress projects yet.')
+  })
+
   it('uses the orbital stack only for certifications and opens a full-screen viewer', async () => {
     const user = userEvent.setup()
     render(<App />)

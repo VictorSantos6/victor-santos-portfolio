@@ -116,6 +116,7 @@ export function validatePortfolio(value: unknown): ValidationErrors {
         }
       })
     }
+    if (!['completed', 'in-progress'].includes(String(item.status))) errors[`${base}.status`] = 'Choose Completed or In progress.'
     if (!['cyan', 'blue', 'amber', 'violet'].includes(String(item.accent))) errors[`${base}.accent`] = 'Choose an available accent.'
     requireList(errors, `${base}.stack`, item.stack, 20).forEach((entry, itemIndex) => requireText(errors, `${base}.stack.${itemIndex}`, entry, 80))
     requireList(errors, `${base}.outcomes`, item.outcomes, 20).forEach((entry, itemIndex) => requireText(errors, `${base}.outcomes.${itemIndex}`, entry, 300))
