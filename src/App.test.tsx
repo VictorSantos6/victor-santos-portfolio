@@ -28,6 +28,21 @@ describe('portfolio experience', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/portfolio', expect.objectContaining({ cache: 'no-store' }))
   })
 
+  it('treats legacy published projects without statuses as completed', async () => {
+    const publishedContent = structuredClone(defaultPortfolio)
+    delete (publishedContent.projects[0] as Partial<(typeof publishedContent.projects)[number]>).status
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => publishedContent,
+    }))
+    const user = userEvent.setup()
+
+    render(<App loadPublished />)
+
+    await user.click(screen.getByRole('button', { name: 'Completed' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: /flash cards app/i })).toBeInTheDocument())
+  })
+
   it('maps every portfolio chapter to its planetary atmosphere', () => {
     expect(Object.fromEntries(
       Object.entries(sectionThemes).map(([section, theme]) => [section, theme.planet.variant]),

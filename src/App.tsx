@@ -15,7 +15,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './App.css'
 import { CertificationStack } from './components/CertificationStack'
 import { ProjectDialog } from './components/ProjectDialog'
-import { defaultPortfolio } from './data/portfolio'
+import { defaultPortfolio, normalizePortfolio } from './data/portfolio'
 import { useReducedMotion } from './hooks/useReducedMotion'
 import { useWebGL } from './hooks/useWebGL'
 import { sectionThemes, themeCssVariables } from './theme'
@@ -94,7 +94,7 @@ function App({ initialContent = defaultPortfolio, loadPublished = false, preview
     const controller = new AbortController()
     fetch('/api/portfolio', { signal: controller.signal, cache: 'no-store' })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('Portfolio unavailable')))
-      .then((content: PortfolioContent) => setPortfolio(content))
+      .then((content: PortfolioContent) => setPortfolio(normalizePortfolio(content)))
       .catch(() => undefined)
     return () => controller.abort()
   }, [loadPublished])
