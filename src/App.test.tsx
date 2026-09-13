@@ -99,7 +99,7 @@ describe('portfolio experience', () => {
     expect(screen.queryByText('victor.santos6@upr.edu')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /download résumé/i })).toHaveAttribute(
       'href',
-      '/Victor-Santos-Resume.pdf',
+      '/api/resume',
     )
     expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute(
       'href',

@@ -38,6 +38,12 @@ describe('Vercel portfolio API bridge', () => {
     )
   })
 
+  it('bridges the public résumé API path to the worker download route', () => {
+    expect(upstreamUrl('/api/resume').toString()).toBe(
+      'https://victor-santos-portfolio.deathplayer3434.chatgpt.site/resume',
+    )
+  })
+
   it('forwards login data with the upstream origin and returns its session cookie', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: true }), {
       status: 200,

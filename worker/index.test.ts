@@ -1,5 +1,5 @@
 import { pbkdf2Sync, randomBytes } from 'node:crypto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import worker, { normalizePortfolio, validImageSignature, validSession, validatePortfolio, verifyPassword } from './index.js'
 import portfolio from '../src/data/portfolio.json'
 
@@ -28,6 +28,34 @@ describe('portfolio worker security helpers', () => {
     const response = await worker.fetch(new Request('https://portfolio.example/api/project-image?key=project-images%2F00000000-0000-4000-8000-000000000000.png'), {})
     expect(response.status).toBe(503)
     await expect(response.json()).resolves.toMatchObject({ error: 'Portfolio storage is unavailable.' })
+  })
+
+  it('keeps the published résumé download outside admin authentication', async () => {
+    const published = structuredClone(portfolio)
+    published.contact.resumeKey = 'resumes/current.pdf'
+    published.contact.resumeName = 'Victor-Santos-Current-Resume.pdf'
+    const row = {
+      id: 1,
+      content_json: JSON.stringify(published),
+      created_at: '2026-09-13T00:00:00.000Z',
+      updated_at: '2026-09-13T00:00:00.000Z',
+      published_at: '2026-09-13T00:00:00.000Z',
+    }
+    const statement = {
+      bind() { return statement },
+      first: vi.fn().mockResolvedValue(row),
+    }
+    const env = {
+      DB: { prepare: vi.fn().mockReturnValue(statement) },
+      R2: { get: vi.fn().mockResolvedValue({ body: new TextEncoder().encode('%PDF-current') }) },
+    }
+
+    const response = await worker.fetch(new Request('https://portfolio.example/api/resume'), env)
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Disposition')).toContain('Victor-Santos-Current-Resume.pdf')
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    await expect(response.text()).resolves.toBe('%PDF-current')
   })
 
   it('rate limits storage-backed public requests per client address', async () => {

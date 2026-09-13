@@ -35,6 +35,7 @@ function isAllowedAdminRequest(request) {
 
 export function upstreamUrl(requestUrl) {
   const incoming = new URL(requestUrl || '/api/portfolio', 'https://vercel.invalid')
+  if (incoming.pathname === '/api/resume') incoming.pathname = '/resume'
   return new URL(`${incoming.pathname}${incoming.search}`, apiOrigin())
 }
 

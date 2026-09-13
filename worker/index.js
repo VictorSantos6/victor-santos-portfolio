@@ -371,6 +371,11 @@ async function handleApi(request, env, pathname) {
     }
   }
 
+  if (pathname === '/api/resume' && (request.method === 'GET' || request.method === 'HEAD')) {
+    const rateLimited = rateLimitResponse(request, 'public-storage', PUBLIC_REQUESTS_PER_MINUTE)
+    return rateLimited || serveResume(env, request.method)
+  }
+
   if (pathname === '/api/admin/session' && request.method === 'GET') {
     return json({ authenticated: await validSession(request, env) })
   }
@@ -609,7 +614,7 @@ async function serveResume(env, method) {
           headers: {
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="${contact.resumeName.replace(/"/g, '')}"`,
-            'Cache-Control': PUBLIC_MEDIA_CACHE,
+            'Cache-Control': 'no-store',
             'X-Content-Type-Options': 'nosniff',
           },
         })
